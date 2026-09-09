@@ -2038,7 +2038,7 @@ class Solution:
 有效括号意味着：左括号≥右括号数量，始终成立，且都小于等于n。那么递归就是根据左右括号的数量来考虑情况。本质上可以想象成在维持一颗符号树
 
 ## 代码
-```pyhon
+```python
 class Solution:
     def generateParenthesis(self, n: int) -> List[str]:
         self.res = []

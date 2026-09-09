@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>N 皇后研究棋盘</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #6f7890;
+      --surface: #ffffff;
+      --line: #e5e8ef;
+      --accent: #5b4bdb;
+      --accent-dark: #4434c1;
+      --light-square: #f4f1ff;
+      --dark-square: #c8bdf5;
+      --danger: #fff0f1;
+      --danger-ink: #c24151;
+      --shadow: 0 18px 50px rgba(40, 45, 80, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 32px 18px 48px;
+      color: var(--ink);
+      font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+      background:
+        radial-gradient(circle at 15% 0%, #eeebff 0, transparent 34%),
+        radial-gradient(circle at 100% 20%, #e2f8f4 0, transparent 30%),
+        #f7f8fb;
+    }
+
+    .app {
+      width: min(100%, 1040px);
+      margin: 0 auto;
+    }
+
+    .hero {
+      margin-bottom: 22px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(30px, 5vw, 48px);
+      letter-spacing: -0.04em;
+      line-height: 1.05;
+    }
+
+    .subtitle {
+      max-width: 650px;
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(270px, 1fr) minmax(320px, 1.05fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    .panel,
+    .board-card {
+      border: 1px solid rgba(229, 232, 239, 0.9);
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.88);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+
+    .panel {
+      padding: 24px;
+    }
+
+    .panel h2,
+    .board-card h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .panel h2 {
+      margin-bottom: 20px;
+    }
+
+    .field-label {
+      display: block;
+      margin-bottom: 9px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      min-width: 0;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      outline: none;
+      color: var(--ink);
+      background: #fbfbfd;
+      font: inherit;
+      font-size: 16px;
+      transition: border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    input[type="number"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(91, 75, 219, 0.13);
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 17px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 700;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, opacity 160ms ease;
+    }
+
+    button:focus-visible {
+      outline: 3px solid rgba(91, 75, 219, 0.3);
+      outline-offset: 2px;
+    }
+
+    .primary-button,
+    .secondary-button {
+      min-height: 46px;
+      padding: 11px 14px;
+    }
+
+    .primary-button {
+      color: #fff;
+      background: var(--accent);
+      box-shadow: 0 8px 18px rgba(91, 75, 219, 0.2);
+    }
+
+    .primary-button:hover {
+      background: var(--accent-dark);
+      transform: translateY(-1px);
+    }
+
+    .secondary-button {
+      color: var(--ink);
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .secondary-button:hover {
+      background: #f6f7fb;
+      transform: translateY(-1px);
+    }
+
+    .tip {
+      margin: 21px 0 0;
+      padding: 14px 15px;
+      border-radius: 14px;
+      color: #565e75;
+      background: #f6f5ff;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .rule-list {
+      display: grid;
+      gap: 10px;
+      margin: 18px 0 0;
+      padding: 0;
+      list-style: none;
+      color: #555e74;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .rule-list li {
+      display: flex;
+      gap: 9px;
+      align-items: flex-start;
+    }
+
+    .rule-list li::before {
+      content: "✓";
+      display: inline-grid;
+      flex: 0 0 20px;
+      place-items: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      color: var(--accent);
+      background: #ece9ff;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .board-card {
+      min-width: 0;
+      padding: 24px;
+    }
+
+    .board-header {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .count {
+      flex: 0 0 auto;
+      padding: 7px 10px;
+      border-radius: 999px;
+      color: var(--accent);
+      background: #f0eeff;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .board-wrap {
+      display: flex;
+      justify-content: center;
+      padding: clamp(2px, 1vw, 14px);
+      border-radius: 18px;
+      background: #f0eff5;
+    }
+
+    .board {
+      display: grid;
+      width: min(100%, 580px);
+      aspect-ratio: 1;
+      overflow: hidden;
+      border: 4px solid #282d48;
+      border-radius: 8px;
+      background: #282d48;
+      box-shadow: 0 12px 25px rgba(37, 42, 66, 0.17);
+    }
+
+    .cell {
+      position: relative;
+      display: grid;
+      min-width: 0;
+      min-height: 0;
+      place-items: center;
+      padding: 0;
+      border-radius: 0;
+      color: #302850;
+      background: var(--light-square);
+      font-size: clamp(22px, 5vw, 40px);
+      line-height: 1;
+      box-shadow: inset -1px -1px 0 rgba(40, 45, 72, 0.22);
+    }
+
+    .cell.dark {
+      background: var(--dark-square);
+    }
+
+    .cell:not(:disabled):hover {
+      z-index: 1;
+      background: #bff3e8;
+      box-shadow: inset 0 0 0 3px #35bba6;
+    }
+
+    .cell:disabled {
+      cursor: not-allowed;
+    }
+
+    .cell.blocked:not(.occupied) {
+      color: rgba(194, 65, 81, 0.42);
+      background: var(--danger);
+    }
+
+    .cell.blocked:not(.occupied)::after {
+      content: "×";
+      position: absolute;
+      color: rgba(194, 65, 81, 0.45);
+      font-size: clamp(16px, 3vw, 26px);
+      font-weight: 500;
+    }
+
+    .cell.occupied {
+      color: #fff;
+      background: var(--accent) !important;
+      cursor: pointer;
+      box-shadow: inset -1px -1px 0 rgba(255, 255, 255, 0.58), inset 0 0 0 2px rgba(255, 255, 255, 0.45);
+    }
+
+    .cell.occupied:hover {
+      background: var(--accent-dark) !important;
+    }
+
+    .queen {
+      display: grid;
+      width: 72%;
+      max-width: 42px;
+      aspect-ratio: 1;
+      place-items: center;
+      overflow: hidden;
+      filter: drop-shadow(0 2px 2px rgba(31, 27, 66, 0.3));
+      font-size: 100%;
+      transform: translateY(-1px);
+    }
+
+    .status {
+      min-height: 48px;
+      margin: 16px 0 0;
+      padding: 12px 14px;
+      border-radius: 12px;
+      color: #555e74;
+      background: #f7f8fb;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .status.success {
+      color: #147461;
+      background: #e9faf6;
+    }
+
+    .status.warning {
+      color: var(--danger-ink);
+      background: var(--danger);
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 18px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      gap: 7px;
+      align-items: center;
+    }
+
+    .legend-swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      background: #bff3e8;
+      box-shadow: inset 0 0 0 2px #35bba6;
+    }
+
+    .legend-swatch.blocked {
+      background: var(--danger);
+      box-shadow: none;
+    }
+
+    @media (max-width: 720px) {
+      body {
+        padding: 24px 12px 36px;
+      }
+
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .panel,
+      .board-card {
+        padding: 18px;
+        border-radius: 18px;
+      }
+
+      .board-card {
+        order: -1;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .button-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <p class="eyebrow">ALGORITHM LAB · BACKTRACKING</p>
+      <h1>N 皇后研究棋盘</h1>
+      <p class="subtitle">亲手放置皇后，观察每一步选择如何影响后续位置。棋盘最大支持 10 × 10。</p>
+    </header>
+
+    <section class="workspace" aria-label="N 皇后棋盘操作区">
+      <aside class="panel">
+        <h2>设置棋盘</h2>
+        <label class="field-label" for="size-input">皇后数量 / 棋盘边长 N</label>
+        <div class="input-row">
+          <input id="size-input" type="number" min="1" max="10" step="1" value="8" inputmode="numeric" aria-describedby="size-help" />
+        </div>
+        <div id="size-help" class="tip">请输入 1–10 的整数。修改 N 后点击“重置棋盘”，棋盘会按新尺寸重新生成。</div>
+
+        <div class="button-row">
+          <button id="start-button" class="primary-button" type="button">开始摆放</button>
+          <button id="reset-button" class="secondary-button" type="button">重置棋盘</button>
+        </div>
+
+        <ul class="rule-list" aria-label="游戏规则">
+          <li>每一行最多放置一个皇后。</li>
+          <li>每一列最多放置一个皇后。</li>
+          <li>两条对角线方向不能互相攻击。</li>
+        </ul>
+      </aside>
+
+      <section class="board-card" aria-labelledby="board-title">
+        <div class="board-header">
+          <h2 id="board-title"><span id="board-size">8 × 8</span> 棋盘</h2>
+          <span id="queen-count" class="count">0 / 8</span>
+        </div>
+
+        <div class="board-wrap">
+          <div id="board" class="board" role="grid" aria-label="N 皇后棋盘"></div>
+        </div>
+
+        <p id="status" class="status" role="status" aria-live="polite">点击“开始摆放”后，选择一个合法位置放置皇后。</p>
+
+        <div class="legend" aria-label="棋盘图例">
+          <span class="legend-item"><span class="legend-swatch"></span>可放置位置</span>
+          <span class="legend-item"><span class="legend-swatch blocked"></span>当前受攻击位置</span>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const board = document.getElementById("board");
+      const sizeInput = document.getElementById("size-input");
+      const startButton = document.getElementById("start-button");
+      const resetButton = document.getElementById("reset-button");
+      const status = document.getElementById("status");
+      const boardSize = document.getElementById("board-size");
+      const queenCount = document.getElementById("queen-count");
+
+      let size = 8;
+      let queens = [];
+      let isStarted = false;
+
+      function getInputSize() {
+        const value = Number.parseInt(sizeInput.value, 10);
+        return Number.isInteger(value) ? Math.min(10, Math.max(1, value)) : 8;
+      }
+
+      function setStatus(message, type = "") {
+        status.textContent = message;
+        status.className = `status${type ? ` ${type}` : ""}`;
+      }
+
+      function isAttacked(row, col) {
+        return queens.some(([queenRow, queenCol]) => (
+          queenRow === row ||
+          queenCol === col ||
+          Math.abs(queenRow - row) === Math.abs(queenCol - col)
+        ));
+      }
+
+      function isOccupied(row, col) {
+        return queens.some(([queenRow, queenCol]) => queenRow === row && queenCol === col);
+      }
+
+      function cellLabel(row, col, blocked, occupied) {
+        const position = `${String.fromCharCode(65 + col)}${row + 1}`;
+        if (occupied) return `第 ${row + 1} 行，第 ${col + 1} 列，皇后所在位置，点击取消`;
+        if (blocked) return `第 ${row + 1} 行，第 ${col + 1} 列，当前不可放置`;
+        return `第 ${row + 1} 行，第 ${col + 1} 列，${position}，可放置`;
+      }
+
+      function renderBoard() {
+        board.replaceChildren();
+        board.style.gridTemplateColumns = `repeat(${size}, minmax(0, 1fr))`;
+        board.style.gridTemplateRows = `repeat(${size}, minmax(0, 1fr))`;
+        board.setAttribute("aria-label", `${size} 乘 ${size} 的 N 皇后棋盘`);
+        boardSize.textContent = `${size} × ${size}`;
+        queenCount.textContent = `${queens.length} / ${size}`;
+
+        for (let row = 0; row < size; row += 1) {
+          for (let col = 0; col < size; col += 1) {
+            const occupied = isOccupied(row, col);
+            const blocked = !occupied && isAttacked(row, col);
+            const cell = document.createElement("button");
+
+            cell.type = "button";
+            cell.className = `cell ${(row + col) % 2 ? "dark" : "light"}${blocked ? " blocked" : ""}${occupied ? " occupied" : ""}`;
+            cell.setAttribute("role", "gridcell");
+            cell.setAttribute("aria-label", cellLabel(row, col, blocked, occupied));
+            cell.dataset.row = row;
+            cell.dataset.col = col;
+
+            if (occupied) {
+              cell.innerHTML = '<span class="queen" aria-hidden="true">♛</span>';
+              cell.addEventListener("click", () => removeQueen(row, col));
+            } else {
+              cell.disabled = !isStarted || blocked;
+              cell.addEventListener("click", () => placeQueen(row, col));
+            }
+
+            board.appendChild(cell);
+          }
+        }
+      }
+
+      function placeQueen(row, col) {
+        if (!isStarted) {
+          setStatus("请先点击“开始摆放”，再选择位置。", "warning");
+          return;
+        }
+
+        if (isAttacked(row, col)) {
+          setStatus("这个位置会被已有皇后攻击，请选择棋盘上未标红的位置。", "warning");
+          return;
+        }
+
+        queens.push([row, col]);
+        renderBoard();
+
+        if (queens.length === size) {
+          setStatus(`恭喜！你已经完成 ${size} 皇后摆放，所有皇后都互不攻击。`, "success");
+          startButton.textContent = "已完成";
+          startButton.disabled = true;
+        } else {
+          setStatus(`已放置 ${queens.length} 个皇后，还需要放置 ${size - queens.length} 个。请选择未标红的位置。`);
+        }
+      }
+
+      function removeQueen(row, col) {
+        const queenIndex = queens.findIndex(([queenRow, queenCol]) => queenRow === row && queenCol === col);
+        if (queenIndex === -1) return;
+
+        queens.splice(queenIndex, 1);
+        isStarted = true;
+        startButton.disabled = false;
+        startButton.textContent = "摆放中";
+        renderBoard();
+        setStatus(`已取消第 ${row + 1} 行、第 ${col + 1} 列的皇后。现在已放置 ${queens.length} 个皇后。`);
+      }
+
+      function startGame() {
+        if (queens.length === size) return;
+        isStarted = true;
+        startButton.textContent = "摆放中";
+        sizeInput.disabled = true;
+        renderBoard();
+        setStatus("摆放模式已开启。点击一个位置放置第 1 个皇后。", "success");
+      }
+
+      function resetGame() {
+        size = getInputSize();
+        sizeInput.value = size;
+        queens = [];
+        isStarted = false;
+        sizeInput.disabled = false;
+        startButton.disabled = false;
+        startButton.textContent = "开始摆放";
+        renderBoard();
+        setStatus(`棋盘已重置为 ${size} × ${size}。点击“开始摆放”后开始。`);
+      }
+
+      sizeInput.addEventListener("change", () => {
+        const value = Number.parseInt(sizeInput.value, 10);
+        if (!Number.isInteger(value) || value < 1 || value > 10) {
+          sizeInput.value = getInputSize();
+          setStatus("N 必须是 1–10 的整数；已自动调整为有效值。", "warning");
+        }
+      });
+
+      startButton.addEventListener("click", startGame);
+      resetButton.addEventListener("click", resetGame);
+
+      renderBoard();
+    })();
+  </script>
+</body>
+</html>
