@@ -1936,3 +1936,181 @@ class Solution:
                 self.dfs(current_list)
                 current_list.pop()
 ```
+# 56.子集
+> 链接：https://leetcode.cn/problems/subsets/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+每层随机选一个数据，下一层的数据只能在这个数据的右边选择坐标，当连续的选择完毕，就会选择有间隔的，全程只需要加入各种组合即可。
+
+## 代码
+```python
+class Solution:
+    def subsets(self, nums: List[int]) -> List[List[int]]:
+        self.n = len(nums)
+        self.nums = nums
+        self.res = []
+        self.dfs(start_index=0,current_list=[])
+        return self.res
+    
+    def dfs(self,start_index=0,current_list:list=[]):
+        self.res.append(current_list.copy()) if current_list not in self.res else None
+        for index in range(start_index,self.n):
+            current_list.append(self.nums[index])
+            self.dfs(index+1,current_list)
+            current_list.pop()
+```
+
+# 57.电话号码的字母组合
+> 链接：https://leetcode.cn/problems/letter-combinations-of-a-phone-number/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+首先建表，记录每个数字对应的字母映射。然后每层读取数字，随机选择一个字母，dfs递归即可
+
+## 代码
+```python
+class Solution:
+    def letterCombinations(self, digits: str) -> List[str]:
+        self.my_dict = {
+            "2":"abc",
+            "3":"def",
+            "4":"ghi",
+            "5":"jkl",
+            "6":"mno",
+            "7":"pqrs",
+            "8":"tuv",
+            "9":"wxyz"
+        }
+        self.res = []
+        self.dfs(0,digits,"")
+        return self.res
+
+    def dfs(self,layer_num:int,digits:str,cur_str:str):
+        if layer_num == len(digits):
+            self.res.append(cur_str)
+            return
+        for char in self.my_dict[digits[layer_num]]:
+            self.dfs(layer_num+1,digits,cur_str+char)
+```
+# 58.组合总和
+
+> 链接：https://leetcode.cn/problems/combination-sum/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+每层试着放置[0，余额//当前数字]个当前数字，然后将余额传递给下一层，只要最后一层能整除，那么就是一种方案。最后返回总列表就是答案
+
+## 代码
+```python
+class Solution:
+    def combinationSum(self, candidates: List[int], target: int) -> List[List[int]]:
+        self.counts = []
+        self.candidates = candidates
+        self.dfs(0,target,[])
+        self.res = []
+        # print(self.counts)
+        for i,values in enumerate(self.counts):
+            _ = []
+            for k,v in enumerate(values):
+                _.extend([self.candidates[k]]*v)
+            self.res.append(_)
+        return self.res
+    
+    def dfs(self,layer_num:int,current_balance:int,payment_list:list):
+
+        print(f"第{layer_num}层，{current_balance}，当前选择：{payment_list}")
+        if layer_num==len(self.candidates):
+            self.counts.append(payment_list.copy()) if current_balance ==0 else None
+            return
+        if layer_num == len(self.candidates)-1 and current_balance % self.candidates[layer_num]: return
+        
+        min_range,max_range = 0,current_balance // self.candidates[layer_num]
+        print(f"当前范围：{min_range}-{max_range}")
+        for i in range(min_range,max_range+1):
+            payment_list.append(i)
+            self.dfs(layer_num+1,current_balance-i*self.candidates[layer_num],payment_list)
+            payment_list.pop()
+
+```
+
+# 59.括号生成
+> 链接：https://leetcode.cn/problems/generate-parentheses/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+有效括号意味着：左括号≥右括号数量，始终成立，且都小于等于n。那么递归就是根据左右括号的数量来考虑情况。本质上可以想象成在维持一颗符号树
+
+## 代码
+```pyhon
+class Solution:
+    def generateParenthesis(self, n: int) -> List[str]:
+        self.res = []
+        self.n = n
+        self.dfs("",0,0)
+        return self.res
+    
+    def dfs(self,current_str:str,left_num:int,right_num:int):
+        if left_num==self.n and right_num == self.n:
+            self.res.append(current_str)
+            return
+        
+        if left_num < self.n:
+            current_str = current_str+"("
+            self.dfs(current_str,left_num+1,right_num)
+            current_str = current_str[:-1]
+        
+        if right_num < left_num:
+            current_str = current_str+")"
+            self.dfs(current_str,left_num,right_num+1)
+            current_str = current_str[:-1]
+```
+# 60.单词搜索
+> 链接：https://leetcode.cn/problems/word-search/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+dfs搜索是否有符合要求的字符串路径即可，需要注意搜索退出后需要将格子进行恢复。麻烦的是这里需要判断字符串边界和标记地图边界，代码长一点
+
+## 代码
+```python
+class Solution:
+    def exist(self, board: List[List[str]], word: str) -> bool:
+        alphe_recoder:dict[str,list[tuple[int,int]]] = dict()
+        for i in range(len(board)):
+            for j in range(len(board[0])):
+                if board[i][j] not in alphe_recoder:
+                    alphe_recoder[board[i][j]] = []
+                alphe_recoder[board[i][j]].append(tuple((i,j)))
+        start_str = word[0]
+        FLAG = False
+        self.word = word
+        self.board = board
+        if start_str not in alphe_recoder: return False
+        for pos in alphe_recoder[start_str]:
+            start_x,start_y = pos
+            print(f"从{start_x}，{start_y}开始")
+            FLAG = FLAG or self.start_dfs(start_x,start_y)
+        
+        return FLAG
+    
+    def start_dfs(self,start_x:int,start_y:int) -> bool:
+        my_res = {
+            "flag":False
+        }
+        my_map = [[True for i in range(len(self.board[0]))] for j in range(len(self.board))]
+        self.dfs(start_x,start_y,0,my_res,my_map)
+        del my_map
+        return my_res['flag']
+    
+    def dfs(self,start_x:int,start_y:int,cur_index:int,my_res:dict[str,bool],my_map:list[list[bool]]):
+        if cur_index == len(self.word)-1:
+            print("dingding")
+            my_res['flag'] = True
+            return
+        my_map[start_x][start_y] = False
+        if cur_index+1 < len(self.word) and start_x -1 >=0 and my_map[start_x -1][start_y] and self.board[start_x -1][start_y] == self.word[cur_index+1]:
+            self.dfs(start_x -1,start_y,cur_index+1,my_res,my_map) 
+        if cur_index+1 < len(self.word) and  start_x +1 < len(self.board) and my_map[start_x +1][start_y] and self.board[start_x +1][start_y] == self.word[cur_index+1]:
+            self.dfs(start_x +1,start_y,cur_index+1,my_res,my_map) 
+        if cur_index+1 < len(self.word) and start_y -1 >=0 and my_map[start_x ][start_y-1] and self.board[start_x ][start_y-1] == self.word[cur_index+1]:
+            self.dfs(start_x ,start_y-1,cur_index+1,my_res,my_map) 
+        if cur_index+1 < len(self.word) and start_y +1 <len(self.board[0]) and my_map[start_x ][start_y+1]  and self.board[start_x ][start_y+1] == self.word[cur_index+1]:
+            self.dfs(start_x ,start_y+1,cur_index+1,my_res,my_map) 
+        my_map[start_x][start_y] = True
+```
