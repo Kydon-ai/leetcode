@@ -18,6 +18,7 @@
 
 ## 思路
 暴力思路：两个循环分别指向数组中的两个不同位置，分别遍历
+
 题解思路：每遍历一个数据，可以知道当前哪个数据已经被遍历，而遍历到后续的数据时，可以通过**哈希表**将以存在的数据以平均O(1)的速度快速查找是否存在，这样就可以等效以接近O(n)的速度判断当前位置的前置互补数字是否存在。
 
 ## 代码
@@ -148,6 +149,7 @@ class Solution:
 
 ## 思路
 暴力思路：看数据范围，10^3大概可以用O(n^3)，暴力可以过
+
 官方思路：使用三指针法，首先进行升序排序。然后一个中指针进行遍历，另外两个指针分别指向数组开头和结尾，中指针会遍历除两端以外的每个位置，算法复杂度最差接近O(n^2),因为是对0为目标求和，可以利用这一点进行剪枝（最大组合小于0，跳过找后续；最小组合大于0，终止）
 
 ## 代码
@@ -252,6 +254,7 @@ class Solution:
 
 ## 思路
 暴力思路：遍历每个位置，截取异位词长度排序，如果是异位词则加入下标进答案
+
 官方思路：维护一个哈希计数表，如果计数表和目标词一致，则加入前len(target)作为下标进入数组
 ## 代码
 ```python
@@ -1667,4 +1670,88 @@ class Solution:
         return root
 ```
 
-# 48.
+# 48.路径总和 III
+
+> 链接：https://leetcode.cn/problems/path-sum-iii/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+朴素的思路是，每检查到一个点记录前缀和，然后`遍历之前的节点的前缀和`并`计算差值是否为target`，复杂度为O(n)。事实上我们使用哈希表，查找`当前前缀和与目标值的差值`是否出现在历史当中，可以优化掉O(n)的遍历过程。又因为遍历每个状态时，我们只需要从根节点到目前位置的一串序列即可，所以可以只使用一个数组，再结合进栈退栈操作实现前缀和的保存。
+
+这道题要求方案总数，因为一个差值可能出现多次，所以需要额外使用一个字典记录出现的次数
+## 代码
+```python
+class Solution:
+    def pathSum(self, root: Optional[TreeNode], targetSum: int) -> int:
+        self.prefix_list = []
+        self.count_record = dict()
+        self.count_record[0]=1
+        self.targetSum = targetSum
+        self.count = 0
+        self.traversal(root)
+        return self.count
+    
+    def traversal(self,root: Optional[TreeNode]) -> None:
+        if root is None: return 
+        value = (self.prefix_list[-1] if len(self.prefix_list) else 0) + root.val
+        if value - self.targetSum in self.count_record:
+            self.count +=self.count_record[value-self.targetSum]
+        self.prefix_list.append(value)
+        self.count_record[value] = self.count_record.get(value,0)+1
+
+        self.traversal(root.left) if root.left else None
+        self.traversal(root.right) if root.right else None
+        self.prefix_list.pop()
+        self.count_record[value] -=1
+```
+
+# 49.二叉树的最近公共祖先
+
+> 链接：https://leetcode.cn/problems/lowest-common-ancestor-of-a-binary-tree/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+朴素思路：先一直递归一个节点，将所有节点加入哈希表。再往上迭代另一个，第一个碰到存在表中的相同节点就是答案。复杂度O(n)
+
+官方思路：迭代每一个节点的左右分支，如果左右分支全部找到了p或者q，那么这个节点就是目标节点。否则就继续迭代有结果的对应分支
+
+> PS:其实这道题和链表相交的第一个节点是一样的解题思路！
+
+## 代码
+```python
+class Solution:
+    def lowestCommonAncestor(self, root: 'TreeNode', p: 'TreeNode', q: 'TreeNode') -> 'TreeNode':
+        if not root or root==p or root==q: return root
+        left = self.lowestCommonAncestor(root.left,p,q)
+        right = self.lowestCommonAncestor(root.right,p,q)
+        
+        if left and right: return root
+        else:
+            return (left if left else right)
+```
+
+# 50.二叉树中的最大路径和
+
+> 链接：https://leetcode.cn/problems/binary-tree-maximum-path-sum/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+有点像由背包问题演化过来的树上DP问题，如果一个节点的左右分支有贡献，那么则加上，否则舍弃置零。答案就是途中的权重的历史最大值。
+
+## 代码
+```python
+class Solution:
+    def maxPathSum(self, root: Optional[TreeNode]) -> int:
+        self.res = -2000
+        self.traversal(root)
+        return self.res
+
+    def traversal(self,root: Optional[TreeNode]) -> int:
+        if root is None: return 0
+        left,right = 0,0
+        if root.left:
+            left = max(self.traversal(root.left),0)
+        if root.right:
+            right = max(self.traversal(root.right),0)
+        
+        wight = root.val + left + right
+        self.res = max(self.res,wight)
+        return root.val + max(left,right)
+```
