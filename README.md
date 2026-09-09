@@ -1755,3 +1755,184 @@ class Solution:
         self.res = max(self.res,wight)
         return root.val + max(left,right)
 ```
+# 51.岛屿数量
+
+> 链接：https://leetcode.cn/problems/number-of-islands/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+对每个遇到的陆地格子（标记为1的）进行dfs并计数，将遍历过的陆地标记（置为3）。直到遍历完最后一个格子，计数就是答案。
+
+## 代码
+```python
+class Solution:
+    def numIslands(self, grid: List[List[str]]) -> int:
+        count =0
+        for i in range(len(grid)):
+            for j in range(len(grid[0])):
+                if grid[i][j] =='1':
+                    self.dfs(grid,i,j)
+                    count +=1
+        return count
+    
+    def dfs(self, grid: List[List[str]],x:int,y:int) -> None:
+        grid[x][y] = '3'
+
+        self.dfs(grid,x-1,y) if x-1 >=0 and grid[x-1][y] =='1' else None
+        self.dfs(grid,x+1,y) if x+1 <len(grid) and grid[x+1][y] =='1' else None
+        self.dfs(grid,x,y-1) if y-1 >=0 and grid[x][y-1] =='1' else None
+        self.dfs(grid,x,y+1) if y+1 <len(grid[0]) and grid[x][y+1] =='1' else None
+```
+# 52.腐烂的橘子
+> 链接：https://leetcode.cn/problems/rotting-oranges/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+开始将所有腐烂橘子坐标收集，每次收集最新的边界腐烂橘子列表，如果不为空则计数+1，到最后如果腐烂橘子数量不等于总橘子数量，则返回-1，否则返回计数
+
+## 代码
+```python
+class Solution:
+    def orangesRotting(self, grid: List[List[int]]) -> int:
+        count = 0
+
+        all_count,rust_count = 0,0
+        writ_list:list[tuple[int,int]] = []
+        for i in range(len(grid)):
+            for j in range(len(grid[0])):
+                if grid[i][j] == 2:
+                    writ_list.append(tuple((i,j)))
+                    rust_count +=1
+                elif grid[i][j] ==1:
+                    all_count+=1      
+        all_count+=rust_count
+
+        while len(writ_list):
+            _ = []
+            for local in writ_list:
+                self.detect(grid,_,local)
+            writ_list = _
+            if len(writ_list):
+                count +=1
+                rust_count +=len(writ_list)
+        return count if rust_count==all_count else -1
+    
+    def detect(self,grid: List[List[int]],_:list[tuple[int,int]],local:tuple[int,int]) -> None:
+        x,y = local[0],local[1]
+        if x-1 >=0 and grid[x-1][y] ==1:
+            _.append(tuple((x-1,y)))
+            grid[x-1][y] = 2
+        if x+1 <len(grid) and grid[x+1][y] ==1:
+            _.append(tuple((x+1,y)))
+            grid[x+1][y] = 2
+        if y-1 >=0 and grid[x][y-1] ==1:
+            _.append(tuple((x,y-1)))
+            grid[x][y-1] = 2
+        if y+1 <len(grid[0]) and grid[x][y+1] ==1:
+            _.append(tuple((x,y+1)))
+            grid[x][y+1] = 2
+```
+# 53.课程表
+> 链接：https://leetcode.cn/problems/course-schedule/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+使用邻接表记录边信息，然后对每个课程开始依次搜索，如果该课程已经被以前的课程搜索过了不在环上则跳过该门课（使用2作为标记）。如果在dfs过程中发现将访问的节点已经标记为正在访问，则认定为存在环，修改全局答案。最后返回标志位即为答案。
+
+## 代码
+```python
+class Solution:
+    def canFinish(self, numCourses: int, prerequisites: List[List[int]]) -> bool:
+        self.edges = collections.defaultdict(list)
+        for item in prerequisites:
+            self.edges[item[1]].append(item[0]) # 完成所依赖的1号，才能做0号等其他的
+        self.visited= [0 for i in range(numCourses)]
+        self.no_circle = True
+        
+        for i in range(numCourses):
+            if self.no_circle and not self.visited[i]:
+                self.dfs(i)
+            
+        return self.no_circle
+
+    def dfs(self,u:int) -> None:
+        self.visited[u] = 1
+
+        for v in self.edges[u]:
+            if self.visited[v] == 1:
+                self.no_circle = False
+                return
+            elif self.visited[v] == 0:
+                self.dfs(v)
+                # if not self.no_circle: return
+        self.visited[u] = 2
+
+```
+# 54.实现 Trie (前缀树)
+> 链接：https://leetcode.cn/problems/implement-trie-prefix-tree/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+使用树形结构，从根目录的空开始作为引用，挨个遍历需要查找的单词，如果到目标单词结尾时存在结束标志，则存在该单词和前缀。如果到目标单词结尾时不存在结束标志，则认为只存在该单词前缀。分别用于实现search和startsWith
+
+## 代码
+```python
+class Trie:
+
+    def __init__(self,is_end:bool=False):
+        self.is_end = is_end
+        self.next:dict[str,Node] = dict()
+
+    def insert(self, word: str) -> None:
+        p = self
+        for ch in word:
+            if not p.next.get(ch,None):
+                p.next[ch] = Trie()
+            p = p.next[ch]
+        p.is_end = True
+
+    def search(self, word: str) -> bool:
+        p = self
+        for ch in word:
+            if not p.next.get(ch,None):
+                return False
+            p = p.next[ch]
+        return p.is_end
+        
+
+    def startsWith(self, prefix: str) -> bool:
+        p = self
+        for ch in prefix:
+            if not p.next.get(ch,None):
+                return False
+            p = p.next[ch]
+        return True
+```
+
+# 55.全排列
+> 链接：https://leetcode.cn/problems/permutations/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+个人思路：每层从待选下标中挨个尝试选择一个进入列表，当列表长度满足要求时记录为答案，最终整合的列表集合就是答案
+
+## 代码
+```python
+class Solution:
+    def permute(self, nums: List[int]) -> List[List[int]]:
+        self.res = []
+        self.nums = nums
+        self.index_lists = [index for index,value in enumerate(nums)]
+
+        self.dfs([])
+        return self.res
+    
+    def dfs(self,current_list:list):
+        if len(current_list) == len(self.index_lists):
+            tmp_list = []
+            for _ in current_list:
+                tmp_list.append(self.nums[_])
+            self.res.append(tmp_list)
+            del tmp_list
+            return
+        for index in self.index_lists:
+            if index not in current_list:
+                current_list.append(index)
+                self.dfs(current_list)
+                current_list.pop()
+```
