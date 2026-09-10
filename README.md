@@ -2114,3 +2114,170 @@ class Solution:
             self.dfs(start_x ,start_y+1,cur_index+1,my_res,my_map) 
         my_map[start_x][start_y] = True
 ```
+
+# 61.分割回文串
+> 链接：https://leetcode.cn/problems/palindrome-partitioning/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+起始位置设置为0，枚举每一个分割末尾位置，如果分割区域是回文串则保存。到最终左指针移动到字符串尾部，则将答案记录。
+
+## 代码
+```python
+class Solution:
+    def partition(self, s: str) -> List[List[str]]:
+        self.res = []
+        self.s = s
+        self.dfs(0,[])
+        return self.res
+    
+    def dfs(self,start_index:int,cur_list:list[str]):
+        if start_index == len(self.s):
+            self.res.append(cur_list.copy())
+            return
+        for end in range(start_index,len(self.s)):
+            sub_s = self.s[start_index:end+1]
+            if not self.check_huiwen(sub_s):
+                continue
+            cur_list.append(sub_s)
+            self.dfs(end+1,cur_list)
+            cur_list.pop()
+    
+    def check_huiwen(self,my_str:str) -> bool:
+        return my_str == my_str[::-1]
+```
+# 62.N 皇后
+> 链接：https://leetcode.cn/problems/n-queens/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+N皇后核心放置法则：（1）所有皇后不能放置在同一列（2）所有皇后的行差不能等于列差（3）每行只放一个。所以我们dfs每行，选择一个位置放置皇后。如果放到最后一行放完了，则方案计数+1。真实的比赛场景下，临场找到放置规律会更难，可能得专门给行，列，正对角线，副对角线开四个数组。
+
+## 代码
+```python
+class Solution:
+    def solveNQueens(self, n: int) -> List[List[str]]:
+        self.n =n
+        self.res:List[List[str]] = []
+        self.bfs(0,[])
+        return self.res
+
+    def bfs(self,line_num:int,queens_local:list[int]) -> None:
+        if line_num == self.n :
+            self.res.append(self.get_answer_format(queens_local))
+            return
+
+        for col_num in range(0,self.n):
+            if not self.judge_place(line_num,col_num,queens_local): continue
+            queens_local.append(col_num)
+            self.bfs(line_num+1,queens_local)
+            queens_local.pop()
+
+    def judge_place(self,line_num:int,col_num:int,queens_local:list[int]) -> bool:
+        flag = True
+        for index,q_local in enumerate(queens_local):
+            if q_local-col_num==0 or abs(line_num-index) == abs(q_local-col_num):
+                flag =  False
+                break
+        # print(f"当前：{queens_local}，第{line_num}行，{col_num}列结果{flag}")
+        return flag
+
+    def get_answer_format(self,queens_local:list[int]) -> List[str]:
+        res = []
+        # print("查看queens_local",queens_local)
+        for index,q_local in enumerate(queens_local):
+            _str = ""
+            for i in range(self.n):
+                if i !=q_local:
+                    _str +="."
+                else:
+                    _str +="Q"
+            res.append(_str)
+        return res
+```
+# 63.搜索插入位置
+> 链接：https://leetcode.cn/problems/search-insert-position/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+标准的二分需要把我4个关键边界：（1）while条件等号（2）if判断的等号（3）最终结果是哪个指针（4）结果是要+1还是-1，还是保持原样。一般来说，（1）一般都是写L<=R,而（2）则随机选取，最后的（3）和（4）根据模拟排演情况进行选取即可。模板如下：
+```python
+while left<=right:          # (1)
+    mid = (left + right)//2
+    if nums[mid] < target:  # (2)
+        left = mid +1
+    else:
+        right = mid-1
+return right+1              # (3)和(4)
+```
+## 代码
+```python
+class Solution:
+    def searchInsert(self, nums: List[int], target: int) -> int:
+        left,right = 0,len(nums)-1
+        while left<=right:
+            mid = (left + right)//2
+            if nums[mid]==target:
+                return mid
+            if nums[mid] < target:
+                left = mid +1
+            else:
+                right = mid-1
+        else:
+            return right+1
+```
+
+# 64.搜索二维矩阵
+> 链接：https://leetcode.cn/problems/search-a-2d-matrix/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+个人思路：直接将数组平铺到一个数组当中，O(m+n)的思路，然后再二分
+官方思路：先对每行开头的数据二分，找到小的起始行，对该行的每个数据再进行一次二分
+
+## 代码
+```python
+class Solution:
+    def searchMatrix(self, matrix: List[List[int]], target: int) -> bool:
+        nums = []
+        for a_list in matrix:
+            nums.extend(a_list)
+        
+        i_left ,i_right = 0,len(nums)-1
+        FLAG = False
+        while i_left <= i_right:
+            mid = int((i_left + i_right) /2)
+            if nums[mid] == target:
+                FLAG = True
+                break
+            if target >= nums[mid]:
+                i_left = mid+1
+            else:
+                i_right = mid-1
+        
+        return FLAG
+```
+
+# 65.在排序数组中查找元素的第一个和最后一个位置
+> 链接：https://leetcode.cn/problems/find-first-and-last-position-of-element-in-sorted-array/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+查找第一个位置和最后一个位置，控制if条件的不同，并返回不同的指针即可。这里引入一个开关，标识是否查找最后一个位置，返回对应的指针即可。
+
+## 代码
+```python
+class Solution:
+    def searchRange(self, nums: List[int], target: int) -> List[int]:
+        return self.binary_sort(nums,target,False),self.binary_sort(nums,target,True)
+    
+    def binary_sort(self,nums:list[int],target: int,is_find_next:bool) -> int:
+        if len(nums) ==0: return -1
+        i_left,i_right = 0,len(nums)-1
+        while i_left<=i_right:
+            mid = (i_left+i_right) // 2
+            if nums[mid] < target or (is_find_next and nums[mid] <=target):
+                i_left = mid+1
+            else:
+                i_right = mid -1
+        print(i_left,i_right,is_find_next)
+        if not is_find_next: 
+            return (i_left if i_left<len(nums) and nums[i_left] == target else -1)
+        else: 
+            return (i_right if i_right >=0 and nums[i_right] == target else -1)
+```
