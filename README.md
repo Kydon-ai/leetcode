@@ -2281,3 +2281,154 @@ class Solution:
         else: 
             return (i_right if i_right >=0 and nums[i_right] == target else -1)
 ```
+
+# 66.搜索旋转排序数组
+> 链接：https://leetcode.cn/problems/search-in-rotated-sorted-array/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+这个稍微奇特一点，需要在if条件当中稍微修改一下，需要先判断一步，断点出现在左半边还是在右半边即可。
+
+## 代码
+```python
+class Solution:
+    def search(self, nums: List[int], target: int) -> int:
+        i_left,i_right = 0,len(nums)-1
+        while i_left <=i_right:
+            mid = (i_left + i_right) //2
+            if nums[mid] == target: return mid
+            if nums[0] <= nums[mid]:
+                if nums[0] <= target and target <= nums[mid]:
+                    i_right = mid -1
+                else:
+                    i_left = mid +1
+            else:
+                if nums[mid] <=target and target <= nums[len(nums)-1]:
+                    i_left = mid +1
+                else:
+                    i_right= mid -1
+        else: return -1
+```
+
+# 67.寻找旋转排序数组中的最小值
+> 链接：https://leetcode.cn/problems/find-minimum-in-rotated-sorted-array/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+旋转n次，相当于上题中的从Len-n处整体旋转一次。和上文一样，保存每次遍历的边界最小值，并往最小值存在的方向缩小，最终保存的最小值就是结果。
+
+## 代码
+```python
+class Solution:
+    def findMin(self, nums: List[int]) -> int:
+        i_left,i_right = 0,len(nums)-1
+        res = nums[0]
+        while i_left<=i_right:
+            if nums[i_left] > nums[i_right]:
+                res = min(res,nums[i_right])
+                mid = (i_left + i_right) // 2
+                if nums[mid] >nums[i_left]:
+                    i_left = mid +1
+                else:
+                    i_right = mid
+            else:
+                res = min(res,nums[i_left])
+                break
+        return res
+```
+# 68.寻找两个正序数组的中位数
+> 链接：https://leetcode.cn/problems/median-of-two-sorted-arrays/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+个人思路：将两个数组像合并有序链表一样先合并，然后双指针往中间遍历，两个指针的位置就是答案，取平均值即可。时间复杂度O(n)
+
+官方思路：专门的找第K小的算法。
+
+## 代码
+```python
+class Solution:
+    def findMedianSortedArrays(self, nums1: List[int], nums2: List[int]) -> float:
+        nums = self.get_new_nums(nums1,nums2)
+        i_left,i_right = 0,len(nums)-1
+        while i_left <i_right-1:
+            i_left +=1
+            i_right -=1
+        return float(f"{(nums[i_left] + nums[i_right]) /2:.4f}")
+    
+    def get_new_nums(self,nums1: List[int], nums2: List[int]) -> list[int]:
+        nums = []
+        index1,index2 = 0,0
+        while index1<len(nums1) or index2 < len(nums2):
+            if index1<len(nums1) and index2 < len(nums2):
+                if nums1[index1] < nums2[index2]:
+                    nums.append(nums1[index1])
+                    index1 +=1
+                else:
+                    nums.append(nums2[index2])
+                    index2 +=1
+            elif index1<len(nums1):
+                nums.append(nums1[index1])
+                index1 +=1
+            else:
+                nums.append(nums2[index2])
+                index2 +=1
+        return nums
+```
+
+# 69.有效的括号
+> 链接：https://leetcode.cn/problems/valid-parentheses/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+使用栈保存，如果出现匹配的有括号，则两个都退出。最后栈为空则合法，否则不合法
+
+## 代码
+```python
+class Solution:
+    def isValid(self, s: str) -> bool:
+        my_dict={
+            ')':'(',
+            '}':'{',
+            ']':'['
+        }
+        a_list=[]
+        for i in s:
+            if i == '(' or i =='{' or i=='[':
+                a_list.append(i)
+            else:
+                if len(a_list) and my_dict[i] == a_list[-1]:
+                    a_list.pop()
+                else:
+                    a_list.append(i)
+        return len(a_list) == 0
+```
+# 70.最小栈
+> 链接：https://leetcode.cn/problems/min-stack/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+维护一个最小值前缀列表，保存每一个状态的最小值即可，然后和数据栈同步更新，就能获取到每一步的最小值了。
+
+## 代码
+```python
+class MinStack:
+
+    def __init__(self):
+        self.stack = []
+        self.min_stack = []
+        
+
+    def push(self, value: int) -> None:
+        self.stack.append(value)
+        if len(self.min_stack):
+            self.min_stack.append(min(self.min_stack[-1],value))
+        else:
+            self.min_stack.append(value)
+        
+
+    def pop(self) -> None:
+        self.stack.pop()
+        self.min_stack.pop()
+
+    def top(self) -> int:
+        return self.stack[-1]
+
+    def getMin(self) -> int:
+        return self.min_stack[-1]
+```
