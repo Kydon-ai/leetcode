@@ -2432,3 +2432,153 @@ class MinStack:
     def getMin(self) -> int:
         return self.min_stack[-1]
 ```
+
+# 71.字符串解码
+> 链接：https://leetcode.cn/problems/decode-string/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+使用栈，每次保存一个长度为2的列表：[最初的操作符，下一个操作符的操作次数]。读到`]`时直接退栈结算一次，最终的res_str
+
+## 代码
+```python
+class Solution:
+    def decodeString(self, s: str) -> str:
+        num,cur_str,my_stack= 0,'',[]
+
+        for index,ch in enumerate(s):
+            if ch.isdigit():
+                num = num*10 + int(ch)
+            elif ch =='[':
+                my_stack.append([num,cur_str])
+                num,cur_str = 0,''
+            elif ch ==']':
+                _num,_str = my_stack.pop()
+                cur_str = _str + cur_str*_num
+            else:
+                cur_str +=ch
+        return cur_str
+```
+
+# 72.每日温度
+> 链接：https://leetcode.cn/problems/daily-temperatures/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+单调栈（从大到小），遇到高温就退栈，结算下标距离
+
+## 代码
+```python
+class Solution:
+    def dailyTemperatures(self, temperatures: list[int]) -> list[int]:
+        my_stack = []
+        res = [0 for _ in range(len(temperatures))]
+        for index,temp in enumerate(temperatures):
+            if len(my_stack)==0:
+                my_stack.append(index)
+            else:
+                while len(my_stack) and temp >temperatures[my_stack[-1]]:
+                    target_index = my_stack.pop()
+                    res[target_index] = index - target_index
+                else:
+                    my_stack.append(index)
+        return res
+```
+
+# 73.柱状图中最大的矩形
+> 链接：https://leetcode.cn/problems/largest-rectangle-in-histogram/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+朴素思路：枚举左边界，再从左边界往后枚举右边界，期间保存最小值。使用最小值*距离，取最大结果
+官解思路：枚举每根柱子，如果以这跟柱子拓展出的答案，必须确保找到这跟柱子两边连续的不低于他的高度的柱子。也就是说，从两边找到第一个分别低于这根柱子高度的柱子，就是边界。这点非常难看出来！如果看出来这一点，那么就是我们需要维护一个单调栈（从小到大）就即可。
+然后从左到右维护，得到的是左边界，从右到左维护就是右边界。注意处理好没有最小元素的情况。最后两个列表对应位置相减的下标差就是答案。
+
+## 代码
+```python
+class Solution:
+    def largestRectangleArea(self, heights: List[int]) -> int:
+        n = len(heights)
+        left,right = [0]*n,[0]*n
+        mono_stack = list()
+        for i in range(n):
+            while mono_stack and heights[mono_stack[-1]] >= heights[i]:
+                mono_stack.pop()
+            left[i] = mono_stack[-1] if mono_stack else -1
+            mono_stack.append(i)
+        mono_stack = list()
+        for i in reversed(range(n)):
+            while mono_stack and heights[mono_stack[-1]] >= heights[i]:
+                mono_stack.pop()
+            right[i] = mono_stack[-1] if mono_stack else n
+            mono_stack.append(i)
+        ans = max([(right[i] - left[i] - 1)*heights[i] for i in range(n)])
+        return ans
+```
+
+# 74.数组中的第K个最大元素
+> 链接：https://leetcode.cn/problems/kth-largest-element-in-an-array/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+直接手写heap，或者调用heapq进行操作，然后退堆k-1次即可
+手写heapq的思路：用数组模拟二叉树，第一个元素不用方便下标调试。每加入一个元素，下标从最末尾开始，一直向上交换到父元素比他大。退堆时，选择大的子元素交换上来到超过数组长度为止。这样维护一个大根堆。
+
+## 代码
+手写：
+```python
+class Solution:
+    def findKthLargest(self, nums: List[int], k: int) -> int:
+        heap = [0]
+
+        for num in nums:
+            heap.append(num)
+            cur_index = len(heap)-1
+            while cur_index>1 and heap[cur_index] > heap[cur_index//2]:
+                heap[cur_index], heap[cur_index//2] = heap[cur_index//2], heap[cur_index]
+                cur_index //=2
+        print(heap)
+        for i in range(k-1):
+            heap[1] = heap[-1]
+            heap.pop()
+            cur_index = 1
+            while cur_index*2<len(heap):
+                son = 2*cur_index
+                if son +1<len(heap) and heap[son+1] > heap[son]:
+                    son+=1
+                if heap[son] > heap[cur_index]:
+                    heap[son], heap[cur_index] = heap[cur_index], heap[son] 
+                    cur_index = son
+                else: break
+        return heap[1]
+```
+调库
+```python
+class Solution:
+    def findKthLargest(self, nums: List[int], k: int) -> int:
+        my_heap = []
+        for num in nums:
+            heapq.heappush(my_heap,-num)
+        for i in range(k-1):
+            heapq.heappop(my_heap)
+        
+        return -my_heap[0]
+```
+
+# 75.前 K 个高频元素
+> 链接：https://leetcode.cn/problems/top-k-frequent-elements/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+用Counter取出key和value对，然后将value排第一位加入heapq创建最大堆。连着退出k个元素收集起来即可
+
+## 代码
+```python
+class Solution:
+    def topKFrequent(self, nums: list[int], k: int) -> list[int]:
+        count = Counter(nums)
+        my_heap = []
+        for key,v in count.items():
+            print(key,v)
+            heapq.heappush(my_heap,(-v,key))
+        res = []
+        for i in range(k):
+            v,c = heapq.heappop(my_heap)
+            res.append(c)
+        return res
+```
