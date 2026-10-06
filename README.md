@@ -2582,3 +2582,152 @@ class Solution:
             res.append(c)
         return res
 ```
+
+# 76.数据流的中位数
+> 链接：https://leetcode.cn/problems/find-median-from-data-stream/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+维护两个堆，queMin是大根堆，保留小于等于中位数的数；queMax是小根堆，保留大于中位数的树。如果一个树小于等于max(queMin)，即queMin[0]，那么加入queMin，否则加入queMax。当queMin的元素超过queMax两个，或者queMax超过queMin元素1个，那么则退出最值加入到对面。
+最终总数为奇数，使用queMin[0]，否则使用(queMin[0] + queMax[0])/2作为答案
+
+## 代码
+```python
+import heapq
+class MedianFinder:
+
+    def __init__(self):
+        self.count = 0
+        self.queMin = list() # 大根堆
+        self.queMax = list() # 小根堆
+
+    def addNum(self, num: int) -> None:
+        if self.count ==0:
+            heapq.heappush(self.queMin,-num)
+        else:
+            if num > -self.queMin[0]:
+                heapq.heappush(self.queMax,num)
+                if len(self.queMax) > len(self.queMin):
+                    num = heapq.heappop(self.queMax)
+                    heapq.heappush(self.queMin,-num)
+            else:
+                heapq.heappush(self.queMin,-num)
+                if len(self.queMin) - len(self.queMax) >1:
+                    num = heapq.heappop(self.queMin)
+                    heapq.heappush(self.queMax,-num)
+        self.count+=1
+
+    def findMedian(self) -> float:
+        
+        if self.count &1:
+            return -1.0 * self.queMin[0]
+        else:
+            return (-1.0 * self.queMin[0] + self.queMax[0]) / 2.0
+        
+# Your MedianFinder object will be instantiated and called as such:
+# obj = MedianFinder()
+# obj.addNum(num)
+# param_2 = obj.findMedian()
+```
+
+# 77.买卖股票的最佳时机
+> 链接：https://leetcode.cn/problems/best-time-to-buy-and-sell-stock/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+保存到当前的最小值，计算当前值 - 最小值的最大值。保存最大差值的下标和利润即可
+
+## 代码
+```python
+class Solution:
+    def maxProfit(self, prices: list[int]) -> int:
+        min_v,res =prices[0],0
+
+        for price in prices:
+            value = price - min_v
+            res = max(res,value)
+            min_v = min(min_v,price)
+        return res
+```
+
+# 78.跳跃游戏
+> 链接：https://leetcode.cn/problems/jump-game/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+每到一个格子，维护当前所有情况能到达的最远距离，如果最远距离小于当前下标，那么说明不可达，直接返回False。如果某一步达到了最大长度，那么直接返回True
+
+## 代码
+```python
+class Solution:
+    def canJump(self, nums: List[int]) -> bool:
+        n = len(nums)
+        max_distance = 0
+        for i in range(n):
+            if max_distance < i: break
+            max_distance = max(max_distance,i+nums[i])
+            if max_distance >= n-1:
+                return True
+        return False
+```
+
+# 79.跳跃游戏 II
+> 链接:https://leetcode.cn/problems/jump-game-ii/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+从终点反着跳，从头遍历，找到第一个能跳到终点的第二位置。依次找找到第三位置，直到找到零号元素所用的次数就是答案。
+这里不用担心最前面的元素y是死胡同没人能到他的bug，因为如果前方能到y的后面的元素，那么就一定可以到y！
+
+## 代码
+```python
+class Solution:
+    def jump(self, nums: List[int]) -> int:
+        n = len(nums)
+        m_index = n-1
+        self.res = 0
+        while m_index!=0:
+            m_index = self.get_min_index(nums,m_index)
+        return self.res
+    
+    def get_min_index(self,nums:list[int],cur_index:int)->int:
+        self.res +=1
+        for index in range(cur_index):
+            if index + nums[index] >=cur_index:
+                return index
+```
+
+# 80.划分字母区间
+> 链接：https://leetcode.cn/problems/partition-labels/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+统计每个字符的开始位置和结束位置，将相交的区间合并。返回合并后的区间的长度就是答案。
+
+## 代码
+```python
+class Solution:
+    def partitionLabels(self, s: str) -> List[int]:
+        n = len(s)
+        my_dict:dict[str,dict[str,int]] = dict()
+        for i in range(n):
+            if my_dict.get(s[i],None) is None:
+                my_dict[s[i]] = {
+                    's_index': i,
+                    'e_index': i,
+                }
+            my_dict[s[i]]['e_index'] = i
+        # print(my_dict)
+        a_list = []
+        b_list = []
+        for key in my_dict:
+            a_list.append([my_dict[key]['s_index'],my_dict[key]['e_index']])
+        a_list.sort()
+        for list1 in a_list:
+            flag = True
+            for list2 in b_list:
+                if list2[0] < list1[0] and list1[0] < list2[1]:
+                    list2[1] = max(list1[1],list2[1]) 
+                    flag = False
+            if flag:
+                b_list.append(list1)
+        # print(b_list)
+        for index,i in enumerate(b_list):
+            b_list[index] = i[1]-i[0] +1
+        return b_list
+```
