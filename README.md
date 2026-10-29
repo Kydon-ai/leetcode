@@ -2734,3 +2734,132 @@ class Solution:
             b_list[index] = i[1]-i[0] +1
         return b_list
 ```
+
+# 81.爬楼梯
+> 链接：https://leetcode.cn/problems/climbing-stairs/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+一道很简单的动态规划题，和斐波那契一样。但是是动规很好的入门题，可以尝试从dfs -> 记忆化搜索 -> 一维dp -> 三变量。最后还能套公式极致优化到O(logn)。不过我们做题的话，直接开一维dp就好了
+
+## 代码
+```python
+class Solution:
+    def climbStairs(self, n: int) -> int:
+        dp = [0 for i in range(n+1)]
+        dp[0],dp[1] = 1,1
+        for i in range(2,n+1):
+            dp[i] = dp[i-1] + dp[i-2]
+        
+        return dp[n]
+```
+
+# 82.杨辉三角
+> 题目链接：https://leetcode.cn/problems/pascals-triangle/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+每一行的第一个和最后一个设置为1，中间的设置为它左上方和右上方的数的和即可
+
+## 代码
+```python
+class Solution:
+    def generate(self, numRows: int) -> list[list[int]]:
+        res = []
+        for i in range(numRows):
+            tmp_list = []
+            for j in range(i+1):
+                if j==0 or j == i:
+                    tmp_list.append(1)
+                else:
+                    tmp_list.append(res[-1][j-1] + res[-1][j])
+            res.append(tmp_list)
+        return res
+```
+
+# 83.打家劫舍
+> 链接：https://leetcode.cn/problems/house-robber/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+这一题开始真正进入到需要浅度运用dp思维才能解题的环节了。一般dp设计都是固定的套路，常见的有：
+（1）前缀类dp。按以第i个字符结尾作为状态划分子问题。
+（2）区间类dp。dp[l][r] = 区间 [l, r] 上的最优解，按区间长度从小到大枚举。
+（3）双序列前缀dp。dp[i][j] = 第一个序列前 i 个、第二个序列前 j 个的某种最优值。
+（4）背包类dp。dp[i][j] = 前 i 个物品、容量/代价为 j 时的最优值。
+（5）状态压缩 DP。当"已选/已访问集合"很小时，用二进制位 mask 表示集合，dp[mask] 或 dp[mask][i]
+（6）树形 DP。dp[u][...] = 以 u 为根的子树的最优值，自底向上由子节点合并。在树上做后序
+（7）图上 DP。在 DAG 上按拓扑序转移，dp[u] = 到 u 的最优值。
+（8）按"阶段/时间"定义dp。dp[t][...] = 第 t 个阶段/时刻的状态。比如股票买卖，状态可以设置为买和不买
+（9）数位 DP。dp[pos][tight][...] = 处理到第 pos 位、是否贴着上界时的计数。
+（10）概率/期望 DP。用正推或逆推
+一般搞定前4种，解决60%的dp应该问题不大，更多的提醒得随机应变，想办法搞出子问题。dp向来都是重视思考，代码一般会比较小。
+
+这道题不难看出，应该用前缀类dp或者状态类dp来看待。比如dp[i]应该看做以第i天结尾，能偷到的最大金额。对应子状态就是dp[i] = max(dp[i-1],dp[i-2] + value[i])。状态类dp多开一个维度数组，分别为0和1代表当天偷没偷，然后更新状态
+
+## 代码
+思路1——状态类dp
+```python
+class Solution:
+    def rob(self, nums: List[int]) -> int:
+        n = len(nums)
+        if n==1: return nums[0]
+        elif n==2: return max(nums[0],nums[1])
+        dp  = [0 for i in range(n)]
+        dp[0] = nums[0]
+        dp[1] = max(nums[0],nums[1])
+        for i in range(2,n):
+            dp[i] = max(dp[i-1],dp[i-2] + nums[i])
+        return dp[n-1]
+```
+
+思路2——前缀类dp
+```python
+class Solution:
+    def rob(self, nums: List[int]) -> int:
+        n = len(nums)
+        if n==1: return nums[0]
+        elif n==2: return max(nums[0],nums[1])
+        dp  = [0 for i in range(n)]
+        dp[0] = nums[0]
+        dp[1] = max(nums[0],nums[1])
+        for i in range(2,n):
+            dp[i] = max(dp[i-1],dp[i-2] + nums[i])
+        return dp[n-1]
+```
+
+# 84.完全平方数
+> 链接：https://leetcode.cn/problems/perfect-squares/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+dp[i] = dp[i-j*j] +1。其中保持最小，要枚举j，范围是[1,sqrt(i)]取最小的方案。初始状态为dp[0] = 0
+
+## 代码
+```python
+class Solution:
+    def numSquares(self, n: int) -> int:
+        dp = [float('inf') for i in range(n+1)]
+        dp[0] = 0
+        for i in range(1,n+1):
+            for j in range(1,int(sqrt(i))+1):
+                # print(f"{i}：枚举{j}")
+                dp[i] = min(dp[i-j*j] ,dp[i])
+            dp[i] +=1
+        return dp[n]
+```
+
+# 85.零钱兑换
+> 链接：https://leetcode.cn/problems/coin-change/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+个人思路：这个开始上强度了，根本看不出来是dp，写了个dfs给我报超时我去。只有极致优化的记忆化dfs枚举才能过关，否则会卡常。
+官方思路：dp[i]代表组成金额i需要的最小硬币数是多少dp[i] = dp[i-j] +1,其中j的范围是各种金币类型，模拟以各种金币满足金额时的方案数，取最小的dp[i] ，有值被改动过的就是有方案，否则返回-1
+
+## 代码
+```python
+class Solution:
+    def coinChange(self, coins: list[int], amount: int) -> int:
+        dp = [float('inf') for i in range(amount+1)]
+        dp[0] = 0 # 凑出amount = 0的方案组合
+        for coin in coins:
+            for i in range(coin,amount +1):
+                dp[i] = min(dp[i],dp[i-coin]+1)
+        return dp[amount] if dp[amount]!=float('inf') else -1
+```
