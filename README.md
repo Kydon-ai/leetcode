@@ -2863,3 +2863,135 @@ class Solution:
                 dp[i] = min(dp[i],dp[i-coin]+1)
         return dp[amount] if dp[amount]!=float('inf') else -1
 ```
+
+# 86.单词拆分
+> 链接：https://leetcode.cn/problems/word-break/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+先收集单词分别以哪个字符开头，然后用一个指针指向目前要处理的字符，就可以快速找到候选单词，然后依次遍历 + startswitch就能找到匹配的。这样dfs找到某个满足的条件就是答案。无后向性和副作用，有重叠子问题，我们直接上缓存。内存不是很好，但是速度还可以，可能是样例比较弱
+
+## 代码
+```python
+class Solution:
+    def wordBreak(self, s: str, wordDict: List[str]) -> bool:
+        my_record = defaultdict(list)
+        for word in wordDict:
+            my_record[word[0]].append(word)
+        self.my_record = my_record
+        self.res = False
+        self.dfs(0,s,len(s))
+        return self.res
+        
+    @cache
+    def dfs(self,current_index:int,current_str:str,n:int) -> None:
+        if current_index ==n:
+            self.res = True
+            return
+        words = [word for word in self.my_record[current_str[0]] if current_str.startswith(word)]
+        for word in words:
+            self.dfs(current_index +len(word),current_str[len(word):],n)
+```
+
+# 87.最长递增子序列
+> 链接：https://leetcode.cn/problems/longest-increasing-subsequence/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+按照之前的总结，我们不难想到一种以i结尾的dp，即dp[i] = dp[i-1] +1。但是这样就不能考虑非连续的情况，所以需要对前面所有的dp结果遍历，取得最大值即可。即在num[i] > num[j]时，dp[i] = max(dp[i],dp[j])。时间复杂度为O(n^2)。使贪心 + 二分经过极致的优化，可以达到O(nlogn)
+
+## 代码
+```python
+class Solution:
+    def lengthOfLIS(self, nums: list[int]) -> int:
+        n = len(nums)
+        dp = [0 for i in range(n)]
+        for i in range(n):
+            dp[i] = 1
+            for j in range(i):
+                if nums[j]<nums[i]:
+                    dp[i] = max(dp[i],dp[j]+1)
+        return max(dp)
+```
+
+# 88.乘积最大子数组
+> 链接：https://leetcode.cn/problems/maximum-product-subarray/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+这个思路稍微难想一点，他的朴素标解是开两个一维dp。一般的思路不难想到dp[i] = max(nums[i],dp[i-1]*nums[i]).初始状态为dp[0] = nums[0]。但是这样考虑不到负负得正的情况。标解开两个前缀型dp数组，分别记录当前的乘积最大值和最小值。dp[i] = max(nums[i],dp_max[i-1]*nums[i],dp_min[i-1]*nums[i]),这样就可以屏蔽累乘结果正负情况的差异，统一代码处理
+
+## 代码
+```python
+class Solution:
+    def maxProduct(self, nums: list[int]) -> int:
+        n = len(nums)
+        dp_max,dp_min = [0 for i in range(n)],[float('inf') for i in range(n)]
+
+        for i in range(n):
+            dp_max[i] = nums[i]
+            dp_min[i] = nums[i]
+        
+        for i in range(1,n):
+            dp_min[i] = min(dp_min[i],dp_max[i-1]*nums[i],dp_min[i-1]*nums[i])
+            dp_max[i] = max(dp_max[i],dp_max[i-1]*nums[i],dp_min[i-1]*nums[i])
+        return max(dp_max)
+```
+
+# 89.分割等和子集
+> 链接：https://leetcode.cn/problems/partition-equal-subset-sum/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+这个题目一开始没看出来啥子意思，做了下贪心是做不了的。实际他是一个背包问题的变种，满足dp[i][j]为前i个格子能否装到价值为j的含义，这样dp转移方程就是dp[i][j] = dp[i-1][j] or (j-nums[i]>=0 时，dp[i-1][j-nums[i]])
+
+## 代码
+```python
+class Solution:
+    def canPartition(self, nums: List[int]) -> bool:
+        n = len(nums)
+        sum_n = sum(nums)
+        if sum_n &1 or n<2 or any([num*2 > sum_n for num in nums ]):return False
+        dp = [[False for j in range(sum_n//2+1)] for i in range(n)]
+        dp[0][0] = True
+        for i in range(n):
+            for j in range(sum_n//2+1):
+                if i==0 and j==0: continue
+                else:
+                    dp[i][j] = dp[i-1][j]
+                    if j>=nums[i]:
+                        dp[i][j] |=dp[i-1][j-nums[i]]
+        return dp[n-1][sum_n//2]     
+```
+
+# 90.最长有效括号
+> 链接:https://leetcode.cn/problems/longest-valid-parentheses/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+个人思路：使用栈模拟，每次压进下标id和值，匹配时吐出来，在辅助数组上标记这两个下标为可消除。最后统计辅助数组最长连续标记长度即可。O(n)只不过常数会更大而已。
+官方思路：前缀型dp，dp[i]代表以i下标作为结尾的子串的最长有效子串的长度。一般地有:
+(1)当 dp[i-1],dp[i] == '(',')'时，dp[i] = dp[i-2] + 2
+(2)当 dp[i-1],dp[i] == ')',')',且s[i−dp[i−1]−1]=‘(’（也就是上一个子串也符合要求）时，dp[i]=dp[i−1] + (dp[i−dp[i−1]−2]+2)
+
+## 代码
+```python
+class Solution:
+    def longestValidParentheses(self, s: str) -> int:
+        my_stack = []
+        n = len(s)
+        flags = [False for i in range(n)]
+        for i in range(n):
+            if len(my_stack):
+                if s[i]==')' and my_stack[-1][1]=='(':
+                    index,_ = my_stack.pop()
+                    flags[index],flags[i] = True,True
+                else:
+                    my_stack.append((i,s[i]))
+            else:
+                my_stack.append((i,s[i]))
+        # print(flags)
+        res,count = 0,0
+        for i in flags:
+            if i:
+                count +=1
+                res = max(res,count)
+            else:
+                count = 0
+        return res
+```            
