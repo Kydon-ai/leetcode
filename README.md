@@ -2994,4 +2994,122 @@ class Solution:
             else:
                 count = 0
         return res
-```            
+```
+
+# 91.不同路径
+> 链接：https://leetcode.cn/problems/unique-paths/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+不难看出，这是一道双序列dp题目，状态也非常简单：dp[i][j] = dp[i][j-1] + dp[i-1][j]。可以将第一行第一列设置为0或者做特判，初始状态dp[1][1] = 1
+
+## 代码
+```python
+class Solution:
+    def uniquePaths(self, m: int, n: int) -> int:
+        dp = [[0 for j in range(n+1)] for i in range(m+1)] 
+
+        dp[1][1] = 1
+        for i in range(1,m+1):
+            for j in range(1,n+1):
+                if i==1 and j==1: continue
+                else:
+                    dp[i][j] =dp[i][j-1]+dp[i-1][j]
+        return dp[m][n]
+```
+
+# 92.最小路径和
+> 链接：https://leetcode.cn/problems/minimum-path-sum/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+双序列dp，不难想象dp[i][j] = min(dp[i-1][j],dp[i][j-1]) + grid[i][j]，初始状态dp[0][0] = grid[0][0]。思路和上题一样
+
+## 代码
+```python
+class Solution:
+    def minPathSum(self, grid: list[list[int]]) -> int:
+        m,n = len(grid),len(grid[0])
+        dp = [[0 for i in range(n)] for j in range(m)]
+        for i in range(m):
+            for j in range(n):
+                if i ==0 and j ==0:
+                    dp[i][j] = grid[i][j]
+                elif i==0:
+                    dp[i][j] = dp[i][j-1] + grid[i][j]
+                elif j ==0:
+                    dp[i][j] = dp[i-1][j] + grid[i][j]
+                else:
+                    dp[i][j] = min(dp[i-1][j],dp[i][j-1]) + grid[i][j]
+        return dp[m-1][n-1]
+```
+
+# 93.最长回文子串
+> 链接：https://leetcode.cn/problems/longest-palindromic-substring/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+标记解肯定是马拉车算法，但是有点复杂记不住，好几年前学的了。不过还好我记得可以用中心拓展法去做。为了解决偶数回文无法拓展的问题，我直接转成列表添加分隔符，统一转成奇数长度，最终返回时直接去掉占位符即可
+
+## 代码
+```python
+class Solution:
+    def longestPalindrome(self, s: str) -> str:
+        max_len,res,count = 0,"",0
+        n = len(s)
+        s = "$".join(list(s))
+        n = len(s)
+        # print(s)
+        for i in range(n):
+            tmp_len = 0
+            while i-tmp_len >=0 and i+tmp_len <n:
+                if s[i-tmp_len]!=s[i+tmp_len]: break
+                tmp_s = s[i-tmp_len:i+tmp_len+1]
+                if 2*tmp_len +1 >= max_len and len(tmp_s) - tmp_s.count('$') >count:
+                    max_len,res,count  = 2*tmp_len + 1,tmp_s,len(tmp_s) - tmp_s.count('$')
+                tmp_len +=1
+        # print(res)
+        return res.replace("$","")
+```
+
+# 94.最长公共子序列
+> 链接：https://leetcode.cn/problems/longest-common-subsequence/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+非常经典的dp高频题。当str1[i] == str2[j]时，dp[i][j] = dp[i-1][j-1] +1,否则dp[i][j] = max(dp[i-1][j],dp[i][j-1])
+
+## 代码
+```python
+class Solution:
+    def longestCommonSubsequence(self, text1: str, text2: str) -> int:
+        m,n = len(text1),len(text2)
+        dp = [[0 for j in range(n+1)] for i in range(m+1)]
+        for i in range(1,m+1):
+            for j in range(1,n+1):
+                if text1[i-1] == text2[j-1]:
+                    dp[i][j] = dp[i-1][j-1] +1
+                else:
+                    dp[i][j] = max(dp[i-1][j],dp[i][j-1])
+        return dp[m][n]
+```
+
+# 95.编辑距离
+> 链接：https://leetcode.cn/problems/edit-distance/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+根据上面题目的套路，我们可以感知到这道题，隐隐也在暗示使用双序列dp。一般地，dp[i][j] = min(dp[i-1][j]+1,dp[i][j-1]+1,dp[i-1][j-1]+1),分别对应A串比自己少一个字符，B串比自己少一个字符，A串和B串一样比自己少一个字符的编辑次数情况。特别的当nums[i]==nums[j]时，第三种情况可以不用+1。初始状态dp[i][0] = i,dp[0][j] = j 
+
+## 代码
+```python
+class Solution:
+    def minDistance(self, word1: str, word2: str) -> int:
+        m,n = len(word1),len(word2)
+        dp = [[0 for i in range(n+1)] for j in range(m+1)]
+        for i in range(m+1):
+            for j in range(n+1):
+                if i ==0:
+                    dp[i][j] = j
+                elif j ==0:
+                    dp[i][j] = i
+        for i in range(1,m+1):
+            for j in range(1,n+1):
+                dp[i][j] = min(dp[i-1][j] +1,dp[i][j-1] + 1,dp[i-1][j-1] + (1 if word1[i-1]!=word2[j-1] else 0))
+        return dp[m][n]
+```
