@@ -3113,3 +3113,121 @@ class Solution:
                 dp[i][j] = min(dp[i-1][j] +1,dp[i][j-1] + 1,dp[i-1][j-1] + (1 if word1[i-1]!=word2[j-1] else 0))
         return dp[m][n]
 ```
+
+# 96.只出现一次的数字
+> 链接：https://leetcode.cn/problems/single-number/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+使用异或可以直接做出，相同的数字异或都变成0了，所以初始值设置为0，全部异或一遍，只有一次的数保留。注意这种题还有很多变种，比如只出现两次，只出现三次，重复出现的啥的。有些是三个相加，有些是用lowbit区别，变式很多，像是脑筋急转弯
+
+## 代码
+```python
+class Solution:
+    def singleNumber(self, nums: List[int]) -> int:
+        res = 0
+        for num in nums:
+            res ^= num
+        return res
+```
+
+# 97.多数元素
+> 链接：https://leetcode.cn/problems/majority-element/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+相同的数增加计数，否则减少计数，到最后还有计数的数，那就是答案
+
+## 代码
+```python
+class Solution:
+    def majorityElement(self, nums: List[int]) -> int:
+        num_t,count = -1,0
+        for num in nums:
+            if count ==0:
+                num_t,count = num,1
+            else:
+                if num ==num_t:
+                    count+=1
+                else:
+                    count -=1
+        return num_t
+```
+
+# 98.颜色分类
+> 链接：https://leetcode.cn/problems/sort-colors/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+实际上是一个简化版的三路快排，维护左边为排序好的区间，一直遍历到末尾就是答案
+
+## 代码
+```python
+class Solution:
+    def sortColors(self, nums: List[int]) -> None:
+        """
+        Do not return anything, modify nums in-place instead.
+        """
+        current,left,right = 0,0,len(nums)-1
+        while current<=right:
+            if nums[current]<1:
+                nums[current],nums[left] = nums[left],nums[current]
+                current +=1
+                left +=1
+            elif nums[current] ==1:
+                current +=1
+            else:
+                nums[current],nums[right] = nums[right],nums[current]
+                right -=1
+```
+
+# 99.下一个排列
+> 链接：https://leetcode.cn/problems/next-permutation/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+很特别的专有化下一个排列算法，流程是放两个指针，都是从后往前找。左指针找第一个降序的下标ID，右指针找第一个比这个下标ID数值要大的数字的ID
+如果左指针下标为-1，那么说明有序了，否则交换左指针和右指针的数字。最后将左指针右边的的数组全部逆序，就是下一个排列
+
+## 代码
+```python
+class Solution:
+    def nextPermutation(self, nums: list[int]) -> None:
+        """
+        Do not return anything, modify nums in-place instead.
+        """
+        n = len(nums)
+        i_left,i_right = n-2,n-1
+        while i_left >=0 and nums[i_left] >= nums[i_left+1]:
+            i_left -=1
+        if i_left >=0:
+            while i_right >=0 and nums[i_right] <=nums[i_left]:
+                i_right -=1
+            nums[i_left],nums[i_right]=nums[i_right],nums[i_left]
+        self.reverse_nums(nums,i_left+1,n-1)
+    
+    def reverse_nums(self,nums:list[int],left:int,right:int) -> None:
+        while left<right:
+            nums[left],nums[right] = nums[right],nums[left]
+            left +=1
+            right -=1
+```
+
+# 100.寻找重复数
+> 链接：https://leetcode.cn/problems/find-the-duplicate-number/description/?envType=study-plan-v2&envId=top-100-liked
+
+## 思路
+利用下标作为节点，数值作为next属性建立链表。问题就转化为求环形链表的交点，使用快慢指针即可
+
+## 代码
+```python
+class Solution:
+    def findDuplicate(self, nums: list[int]) -> int:
+        fast = slow = 0
+        while True:
+            fast = nums[nums[fast]]
+            slow = nums[slow]
+
+            if fast == slow: break
+        fast = 0
+        while fast!=slow:
+            fast = nums[fast]
+            slow = nums[slow]
+        return fast
+```
