@@ -12,7 +12,7 @@
 | O(2ⁿ) | ✅ (n≤20) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | O(n!) | ✅ (n≤10) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 
-> 说明：这里讨论的是算法核心处理复杂度。若输入本身包含 n 个元素，读取输入通常已经需要 O(n)；O(1) 表示后续计算步骤不随 n 增长。理论规模满足 2^(10⁸)=10^(10⁸×log₁₀2)≈10^30102999.566，用于说明即使 O(log n) 也会在极端规模下达到约 10⁸ 次操作，实际输入通常无法显式构造。
+> 说明：这里讨论的是算法核心处理复杂度。若输入本身包含 n 个元素，读取输入通常已经需要 O(n)；O(1) 表示后续计算步骤不随 n 增长。理论规模满足 2^(10⁸)=10^(10⁸×lg2)≈10^30102999.566，用于说明即使 O(log n) 在极端规模下达到约 10⁸ 次操作的处理上限作为做题提示。
 
 
 # 1.两数之和
@@ -98,7 +98,7 @@ class Solution:
 > 链接：https://leetcode.cn/problems/move-zeroes/description/?envType=study-plan-v2&envId=top-100-liked
 
 ## 思路
-因为数组的赋值，切片，交换等操作都是原地操作，所以我们保持一个指向当前数组最前方的一个0的下标的前方指针，每次遍历到非零元素时直接将该元素和前方指针位置的元素进行赋值交换即可。这样就能确保遍历一次最后将0都移动到末尾
+因为数组的赋值，切片，交换等操作都是原地操作，所以我们保持一个指向当前数组最前方的一个0的下标的前方指针，每次遍历到非零元素时直接将该元素和前方指针位置的元素进行赋值交换即可，然后更新前方指针的位置。这样就能确保两个指针遍历一次最后将0都移动到末尾
 ## 代码
 ```python
 class Solution:
@@ -155,6 +155,8 @@ class Solution:
 
 官方思路：使用三指针法，首先进行升序排序。然后一个中指针进行遍历，另外两个指针分别指向数组开头和结尾，中指针会遍历除两端以外的每个位置，算法复杂度最差接近O(n^2),因为是对0为目标求和，可以利用这一点进行剪枝（最大组合小于0，跳过找后续；最小组合大于0，终止）
 
+> 官方思路是固定左指针的位置，遍历中指针和右指针，性能会比我的好一倍
+
 ## 代码
 ```python
 class Solution:
@@ -195,7 +197,9 @@ class Solution:
 
 ## 思路
 个人思路：横向扫描法，遍历每个高度，如果有两个以上的高度达到，那么则计算这些间隔之间的间隙之和，时间复杂度为O(h*n)
+
 官方思路1：前缀和（动态规划），分别两次遍历记录每个位置左边前缀和的最大高度和右边前缀和的最大高度。而每个位置从纵向看，能装的水=max(min(左侧最大高度,右侧最大高度)-当前高度,0)。相当于纵向扫描法
+
 官方思路2：单调栈（递减栈），每次找到一个递增的，将其退栈到同等高度。过程中添加当前元素与退栈元素的距离。相当于分段横向扫描法
 ## 代码
 ```python
@@ -229,6 +233,9 @@ class Solution:
 
 ## 思路
 双指针法，同时初始化到数组开头位置。如果尾部指针遍历到重复元素，则更新头部指针到没有重复元素为止
+
+> 感觉叫滑动区间更加贴切些？
+
 ## 代码
 ```python
 class Solution:
@@ -256,9 +263,9 @@ class Solution:
 > 链接：https://leetcode.cn/problems/find-all-anagrams-in-a-string/description/?envType=study-plan-v2&envId=top-100-liked
 
 ## 思路
-暴力思路：遍历每个位置，截取异位词长度排序，如果是异位词则加入下标进答案
+暴力思路：遍历每个位置，截取异位词长度排序，如果是异位词则加入下标进答案。复杂度O(n\*k\*logk)
 
-官方思路：维护一个哈希计数表，如果计数表和目标词一致，则加入前len(target)作为下标进入数组
+官方思路：维护一个哈希计数表，如果计数表和目标词一致，则加入前len(target)作为下标进入数组O(n)~O(n+k)
 ## 代码
 ```python
 class Solution:
@@ -372,25 +379,27 @@ class Solution:
 
 # 13.最大子数组和
 
-> 链接：
+> 链接：https://leetcode.cn/problems/maximum-subarray/description/?envType=study-plan-v2&envId=top-100-liked
 
 ## 思路
 
 经典的**Kadane's**算法，第一次做没了解，用双指针写遍历，边界移动条件怎么改都不对。思路是动态规划，要么加上上一个元素，如果过往的这一段不如当前则直接采用当前数字。结果就是这个过程中的每个结果的最大值。
+> 求最小的话直接都改成min即可
 
 ## 代码
 
 ```python
 class Solution:
-    def maxSubArray(self, nums: List[int]) -> int:
-        global_max = nums[0]
-        current_max = 0
-        if len(nums) == 1:
-            return global_max
-        for num in nums:
-            current_max = max(num,current_max + num)
-            global_max = max(current_max,global_max)
-        return global_max
+    def maxSubArray(self, nums: list[int]) -> int:
+        dp = []
+        for index in range(len(nums)):
+            if index ==0:
+                dp.append(nums[index])
+            else:
+                num = max(nums[index],dp[-1] + nums[index]) 
+                dp.append(num)
+        # print(dp)
+        return max(dp)
 ```
 
 # 14.合并区间
@@ -434,7 +443,8 @@ class Solution:
 
 ## 思路
 
-双端队列直接队首队尾轮转操作即可，记得取余
+双端队列直接队首队尾轮转操作即可，记得取余。
+> 如果要原地操作，就需要三次翻转法
 
 ## 代码
 
@@ -715,28 +725,19 @@ class Solution:
 
 每次遍历，保存上个节点的指针，将next指向前驱节点，最后返回最后一个节点的引用
 
+> 这个属于经典模板
 ## 代码
 
 ```python
-# Definition for singly-linked list.
-# class ListNode:
-#     def __init__(self, val=0, next=None):
-#         self.val = val
-#         self.next = next
 class Solution:
-    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
-        if not head:
-            return None
+    def reverseList(self, head: ListNode | None) -> ListNode | None:
+        pre,post = None,head
         p = head
-        head = head.next 
-        p.next = None
-        while head:
-            t = head
-            head = head.next
-            t.next = p
-            p = t
-        else:
-            return p
+        while post:
+            _ = post
+            post = post.next
+            _.next,pre = pre,_
+        return pre
 ```
 
 # 24.回文链表
@@ -745,8 +746,9 @@ class Solution:
 
 ## 思路
 
-根据之前的反转链表，获取其反转，然后同时遍历，如果元素值不一样则返回False，否则最后返回True
+思路1：根据之前的反转链表，获取其反转，然后同时遍历，如果元素值不一样则返回False，否则最后返回True
 
+思路2：根据快慢指针找中间位置，然后反转中间位置以后的部分再做比较。可以节省一半时间
 ## 代码
 
 ```python
@@ -791,33 +793,18 @@ class Solution:
 
 ## 思路
 
-使用快慢指针，如果走两倍长度，要么快指针直接终止无环；要么会相遇，有环
+使用快慢指针，如果走两倍长度，要么快指针直接终止无环；要么会相遇，有环。最多遍历两轮就结束了，不用手动控制结束条件
 
 ## 代码
 
 ```python
-# Definition for singly-linked list.
-# class ListNode:
-#     def __init__(self, x):
-#         self.val = x
-#         self.next = None
-
 class Solution:
     def hasCycle(self, head: Optional[ListNode]) -> bool:
-        if not head:
-            return False 
-        max_N = 3e4 // 1
-        slow = fast = head 
-        fast = fast.next
-        while max_N and fast:
-            max_N -=1
-            if fast == slow:
-                return True
-            if fast.next:
-                fast = fast.next.next
-                slow= slow.next
-            else:
-                break
+        fast = slow  =head
+        while fast and fast.next:
+            fast = fast.next.next
+            slow = slow.next
+            if fast == slow: return True
         return False
 ```
 
@@ -827,43 +814,23 @@ class Solution:
 
 ## 思路
 
-和上题一样，只不过返回值是节点的引用地址
+和上题一样，只不过返回值是节点的引用地址。找到相遇点从head同时出发移动slow，二次相遇点就是交点
 
 ## 代码
 
 ```python
-# Definition for singly-linked list.
-# class ListNode:
-#     def __init__(self, x):
-#         self.val = x
-#         self.next = None
-
 class Solution:
     def detectCycle(self, head: Optional[ListNode]) -> Optional[ListNode]:
-        if not head:
-            return None 
-        max_N = 3e4 // 1
-        slow = fast = head
-        while max_N and fast:
-            max_N -=1
-            if fast.next:
-                fast = fast.next.next
-                slow= slow.next
-            else:
-                return None
-            if fast == slow:
-                break
-        else:
-            return None
-        while head != slow:
-            head = head.next
+        fast = slow = head
+        while fast and fast.next:
+            fast = fast.next.next
             slow = slow.next
-            if slow == head:
+            if fast == slow:
+                while head != slow:
+                    head = head.next
+                    slow = slow.next
                 return head
-        else:
-            return head
-        
-        
+        return None
 ```
 
 
@@ -874,38 +841,24 @@ class Solution:
 
 ## 思路
 
-两个指针遍历，哪个值大就将哪个指针加入新链表，直到两个指针都为None，然后返回新链表头节点
+两个指针遍历，哪个值大就将哪个指针加入新链表，直到两个指针都为None，然后返回新链表头节点。一个节点结束了，就直接将另一个节点的后续所有的内容接上即可
 
 ## 代码
 
 ```python
-# Definition for singly-linked list.
-# class ListNode:
-#     def __init__(self, val=0, next=None):
-#         self.val = val
-#         self.next = next
 class Solution:
-    def mergeTwoLists(self, list1: Optional[ListNode], list2: Optional[ListNode]) -> Optional[ListNode]:
-        p_copy= p = ListNode()
-        while list1 or list2:
-            if list1 and list2:
-                if list1.val <= list2.val:
-                    p.next = list1
-                    list1 = list1.next
-                else:
-                    p.next = list2
-                    list2 = list2.next
+    def mergeTwoLists(self, list1: ListNode | None, list2: ListNode | None) -> ListNode | None:
+        p = pp = ListNode()
+        while list1 and list2:
+            if list1.val <=list2.val:
+                pp.next = list1
+                list1 = list1.next
             else:
-                if list1:
-                    p.next = list1
-                    list1 = list1.next
-                else:
-                    p.next = list2
-                    list2 = list2.next
-            p = p.next
-        
-        return p_copy.next
-        
+                pp.next = list2
+                list2 = list2.next
+            pp =  pp.next
+        pp.next = list1 if list1 else list2
+        return p.next
 ```
 
 # 28.两数相加
@@ -919,34 +872,26 @@ class Solution:
 ## 代码
 
 ```python
-# Definition for singly-linked list.
-# class ListNode:
-#     def __init__(self, val=0, next=None):
-#         self.val = val
-#         self.next = next
 class Solution:
-    def addTwoNumbers(self, l1: Optional[ListNode], l2: Optional[ListNode]) -> Optional[ListNode]:
+    def addTwoNumbers(self, l1: ListNode | None, l2: ListNode | None) -> ListNode | None:
         jinwei = 0
         p = res = ListNode()
         while l1 or l2:
-            if l1 and l2:
-                res.next = ListNode((l1.val + l2.val  + jinwei) %10)
-                jinwei = (l1.val + l2.val  + jinwei) // 10
-            else:
-                if l1:
-                    res.next = ListNode((l1.val+ jinwei) %10)
-                    jinwei = (l1.val  + jinwei) // 10
-                else:
-                    res.next = ListNode((l2.val  + jinwei) %10)
-                    jinwei = (l2.val  + jinwei) // 10
-            l1 = l1.next if l1 else None
-            l2 = l2.next if l2 else None
+            num =  jinwei + (l1.val if l1 else 0) + (l2.val if l2 else 0) 
+            jinwei = num // 10
+            num %= 10
+            res.next = ListNode()
             res = res.next
+            res.val = num
+            if l1:
+                l1 = l1.next 
+            if l2:
+                l2 = l2.next
         if jinwei:
-            res.next = ListNode(jinwei %10)
-        return p.next
-
-        
+            res.next = ListNode()
+            res = res.next
+            res.val = jinwei
+        return p.next 
 ```
 
 
@@ -1033,52 +978,37 @@ class Solution:
 
 实现一个函数，传入起始和结束节点的引用位置，返回反转后这部分的head和tail，外部循环拼接起来。最后返回头节点
 
+> 核心思路是要保留每一段的表头前节点，表头，表尾，表尾后节点，写代码思路就清晰了
 ## 代码
 
 ```python
-# Definition for singly-linked list.
-# class ListNode:
-#     def __init__(self, val=0, next=None):
-#         self.val = val
-#         self.next = next
 class Solution:
-    def reverseKGroup(self, head: Optional[ListNode], k: int) -> Optional[ListNode]:
-        if k==1:
-            return head
-        p0 = ListNode()
-        p0.next = head
-        pp = h = t = p = p0
-        pre = pp
-        pp = pp.next
-        while pp:
-            h = pp
-            for i in range(k):
-                if i == k-1:
-                    t = pp
-                if pp:
-                    pp = pp.next 
-                else:
-                    return p0.next
-            new_head,new_tail = self.reverse_part(h,t)
-            pre.next = new_head
-            new_tail.next = pp
-            pre = new_tail
-            # print("查看转换：",pre.val,new_head.val,new_tail.val,new_tail.next)
-            # print("中途print:",p0.next)
-        return p0.next
-    
-    def reverse_part(self,head: Optional[ListNode],tail: Optional[ListNode])-> tuple[Optional[ListNode],Optional[ListNode]]:
-        # print("进入节点：",head.val,tail.val)
-        p = head
-        stop = tail.next
-        pre,current = head,head.next
-        while current !=stop:
-            # print(f"当前current：{current.val},{tail.val}")
-            _ = current.next
-            current.next= pre
-            pre,current = current,_
+    def reverseKGroup(self, head: ListNode | None, k: int) -> ListNode | None:
+        dummy = ListNode()
+        dummy.next = head
+        pre_group = dummy
+        while True:
+            cur_tail = pre_group
+            for _ in range(k):
+                cur_tail = cur_tail.next
+                if cur_tail is None:
+                    return dummy.next
+            
+            cur_head = pre_group.next
+            tail_group = cur_tail.next
 
-        return pre,p
+            newh,newt = self.reverse_list(cur_head,cur_tail)
+            pre_group.next = newh
+            newt.next = tail_group
+            pre_group = newt
+        
+    def reverse_list(self,head:ListNode,tail:ListNode) -> tuple[ListNode,ListNode]:
+        pre,post = None,head
+        while pre!=tail:
+            _ = post.next
+            post.next = pre
+            pre,post = post,_
+        return tail,head
 ```
 
 ## 32.随机链表的复制
@@ -1135,46 +1065,34 @@ class Solution:
 ## 思路
 
 题目要求O(nlogn)，那么可以使用归并排序而不是冒泡。归并排序要求找到中点，我们使用快慢指针，从慢指针那里开始断开，将head和mid开始的链表继续切分，直到只有一个元素。这样返回两个有序列表，再走有序列表的合并，返回最终的头节点即可
+> 归并排序还是挺好写的:) ,这里是从上到下递归，然后底部排序好返回上来
 
 ## 代码
 
 ```python
-# Definition for singly-linked list.
-# class ListNode:
-#     def __init__(self, val=0, next=None):
-#         self.val = val
-#         self.next = next
 class Solution:
     def sortList(self, head: Optional[ListNode]) -> Optional[ListNode]:
-        if not head or not head.next: return head
-        slow , fast = head,head.next
+        if head is None or head.next is None: return head
+        fast,slow = head.next,head
         while fast and fast.next:
-            slow,fast = slow.next,fast.next.next
-        mid , slow.next = slow.next,None
-        left_start ,right_start =  self.sortList(head),self.sortList(mid)
-        return self.mergeTwoLists(left_start,right_start)
-
+            fast = fast.next.next
+            slow = slow.next
+        mid,slow.next = slow.next,None
+        new_a,new_b = self.sortList(head),self.sortList(mid)
+        return self.merge_link(new_a,new_b)
     
-    def mergeTwoLists(self, list1: Optional[ListNode], list2: Optional[ListNode]) -> Optional[ListNode]:
-        p_copy= p = ListNode()
-        while list1 or list2:
-            if list1 and list2:
-                if list1.val <= list2.val:
-                    p.next = list1
-                    list1 = list1.next
-                else:
-                    p.next = list2
-                    list2 = list2.next
+    def merge_link(self,a: Optional[ListNode],b: Optional[ListNode]) -> Optional[ListNode]:
+        p = pp = ListNode()
+        while a and b:
+            if a.val <= b.val:
+                pp.next = a
+                a = a.next
             else:
-                if list1:
-                    p.next = list1
-                    list1 = list1.next
-                else:
-                    p.next = list2
-                    list2 = list2.next
-            p = p.next
-        
-        return p_copy.next
+                pp.next = b
+                b = b.next
+            pp = pp.next
+        pp.next = a if a else b
+        return p.next
 ```
 
 # 34.合并 K 个升序链表
@@ -1189,32 +1107,27 @@ class Solution:
 
 官方思路2：优先队列，但是维护的是每个链表最前面没有被合并的一个
 
+> 直接用heapq写也不错
 ## 代码
 
 ```python
-# Definition for singly-linked list.
-# class ListNode:
-#     def __init__(self, val=0, next=None):
-#         self.val = val
-#         self.next = next
-from queue import PriorityQueue
-
 class Solution:
-    def mergeKLists(self, lists: List[Optional[ListNode]]) -> Optional[ListNode]:
-        pq = PriorityQueue()
-        count = 0
+    def mergeKLists(self, lists: list[ListNode | None]) -> ListNode | None:
+        my_heap,count = [],0
         for node in lists:
-            while node:
-                pq.put((node.val,count,node))
+            heapq.heappush(my_heap,(node.val,count,node)) if node else None
+            count +=1
+        p = dummy = ListNode()
+
+        while len(my_heap):
+            _,_,node = heapq.heappop(my_heap)
+            p.next = node
+            p = p.next
+            node = node.next
+            if node:
+                heapq.heappush(my_heap,(node.val,count,node)) 
                 count +=1
-                node = node.next
-        p = head = ListNode()
-        while not pq.empty():
-            num,_,node = pq.get()
-            # print(num)
-            head.next = node
-            head = head.next
-        return p.next
+        return dummy.next
 ```
 
 # 35.LRU 缓存
@@ -1229,6 +1142,7 @@ class Solution:
 
 删除就是删除某个节点
 
+> 可以用OrderedDict表示双向链表，否则带TTL的写不完
 ## 代码
 
 ```python
@@ -1360,7 +1274,7 @@ class Solution:
 
 ## 思路
 任意一种二叉树遍历方式，然后直接交换左右子树
-
+> 这里不能用中序
 ## 代码
 ```python
 # Definition for a binary tree node.
@@ -1839,6 +1753,7 @@ class Solution:
 ## 思路
 使用邻接表记录边信息，然后对每个课程开始依次搜索，如果该课程已经被以前的课程搜索过了不在环上则跳过该门课（使用2作为标记）。如果在dfs过程中发现将访问的节点已经标记为正在访问，则认定为存在环，修改全局答案。最后返回标志位即为答案。
 
+> 正式点的称呼应该叫：三状态dfs
 ## 代码
 ```python
 class Solution:
@@ -1873,6 +1788,8 @@ class Solution:
 
 ## 思路
 使用树形结构，从根目录的空开始作为引用，挨个遍历需要查找的单词，如果到目标单词结尾时存在结束标志，则存在该单词和前缀。如果到目标单词结尾时不存在结束标志，则认为只存在该单词前缀。分别用于实现search和startsWith
+
+> 把__init__内的结构写对就有思路了
 
 ## 代码
 ```python
@@ -1912,7 +1829,9 @@ class Trie:
 > 链接：https://leetcode.cn/problems/permutations/description/?envType=study-plan-v2&envId=top-100-liked
 
 ## 思路
-个人思路：每层从待选下标中挨个尝试选择一个进入列表，当列表长度满足要求时记录为答案，最终整合的列表集合就是答案
+个人思路1：每层从待选下标中挨个尝试选择一个进入列表，当列表长度满足要求时记录为答案，最终整合的列表集合就是答案
+
+个人思路2：将序列排序，然后调用下一个排列的方法获取全排列
 
 ## 代码
 ```python
@@ -1943,7 +1862,7 @@ class Solution:
 > 链接：https://leetcode.cn/problems/subsets/description/?envType=study-plan-v2&envId=top-100-liked
 
 ## 思路
-每层随机选一个数据，下一层的数据只能在这个数据的右边选择坐标，当连续的选择完毕，就会选择有间隔的，全程只需要加入各种组合即可。
+每层随机选一个数据，下一层的数据只能在这个数据的右边选择坐标，当连续的选择完毕，就会选择有间隔的，全程只需要加入和判断各种组合即可。
 
 ## 代码
 ```python
@@ -2157,44 +2076,35 @@ N皇后核心放置法则：（1）所有皇后不能放置在同一列（2）�
 ## 代码
 ```python
 class Solution:
-    def solveNQueens(self, n: int) -> List[List[str]]:
-        self.n =n
-        self.res:List[List[str]] = []
-        self.bfs(0,[])
-        return self.res
-
-    def bfs(self,line_num:int,queens_local:list[int]) -> None:
-        if line_num == self.n :
-            self.res.append(self.get_answer_format(queens_local))
-            return
-
-        for col_num in range(0,self.n):
-            if not self.judge_place(line_num,col_num,queens_local): continue
-            queens_local.append(col_num)
-            self.bfs(line_num+1,queens_local)
-            queens_local.pop()
-
-    def judge_place(self,line_num:int,col_num:int,queens_local:list[int]) -> bool:
-        flag = True
-        for index,q_local in enumerate(queens_local):
-            if q_local-col_num==0 or abs(line_num-index) == abs(q_local-col_num):
-                flag =  False
-                break
-        # print(f"当前：{queens_local}，第{line_num}行，{col_num}列结果{flag}")
-        return flag
-
-    def get_answer_format(self,queens_local:list[int]) -> List[str]:
+    def solveNQueens(self, n: int) -> list[list[str]]:
+        self.n = n
+        self.res = []
+        self.dfs(0,[])
+        print(self.res)
+        return self.format_print(self.res)
+    def format_print(self,queen_solutions:list[list[int]]) ->list[list[str]]:
         res = []
-        # print("查看queens_local",queens_local)
-        for index,q_local in enumerate(queens_local):
-            _str = ""
-            for i in range(self.n):
-                if i !=q_local:
-                    _str +="."
-                else:
-                    _str +="Q"
-            res.append(_str)
+        for queen_locations in queen_solutions:
+            _res = []
+            for queen_location in queen_locations:
+                _tmps = ['.']*self.n
+                _tmps[queen_location]='Q'
+                _res.append("".join(_tmps))
+            res.append(_res)
         return res
+    def dfs(self,index:int,queen_locations:list[int]) -> None:
+        if index == self.n:
+            self.res.append(queen_locations.copy())
+        for i in range(self.n):
+            if self.check(index,i,queen_locations):
+                queen_locations.append(i)
+                self.dfs(index +1,queen_locations)
+                queen_locations.pop()
+    
+    def check(sefl,x:int,y:int,queen_locations) ->bool:
+        for index,col in enumerate(queen_locations):
+            if col ==y or abs(x-index) == abs(y-col): return False
+        return True
 ```
 # 63.搜索插入位置
 > 链接：https://leetcode.cn/problems/search-insert-position/description/?envType=study-plan-v2&envId=top-100-liked
@@ -2262,6 +2172,8 @@ class Solution:
 
 ## 思路
 查找第一个位置和最后一个位置，控制if条件的不同，并返回不同的指针即可。这里引入一个开关，标识是否查找最后一个位置，返回对应的指针即可。
+
+> 也可以直接盗用bisect直接做
 
 ## 代码
 ```python
@@ -2343,7 +2255,7 @@ class Solution:
 ## 思路
 个人思路：将两个数组像合并有序链表一样先合并，然后双指针往中间遍历，两个指针的位置就是答案，取平均值即可。时间复杂度O(n)
 
-官方思路：专门的找第K小的算法。
+官方思路：专门的找第K小的算法。有点复杂还没有看
 
 ## 代码
 ```python
@@ -2593,6 +2505,7 @@ class Solution:
 维护两个堆，queMin是大根堆，保留小于等于中位数的数；queMax是小根堆，保留大于中位数的树。如果一个树小于等于max(queMin)，即queMin[0]，那么加入queMin，否则加入queMax。当queMin的元素超过queMax两个，或者queMax超过queMin元素1个，那么则退出最值加入到对面。
 最终总数为奇数，使用queMin[0]，否则使用(queMin[0] + queMax[0])/2作为答案
 
+> 其实可以heapq.heappush + heapq.heappush_max()搭配着来就可以，就不用压入负数了
 ## 代码
 ```python
 import heapq
@@ -2676,7 +2589,7 @@ class Solution:
 
 ## 思路
 从终点反着跳，从头遍历，找到第一个能跳到终点的第二位置。依次找找到第三位置，直到找到零号元素所用的次数就是答案。
-这里不用担心最前面的元素y是死胡同没人能到他的bug，因为如果前方能到y的后面的元素，那么就一定可以到y！
+> 这里不用担心最前面的元素y是死胡同没人能到他的bug，因为如果前方能到y的后面的元素，那么就一定可以到y！
 
 ## 代码
 ```python
@@ -2793,7 +2706,7 @@ class Solution:
 一般搞定前4种，解决60%的dp应该问题不大，更多的提醒得随机应变，想办法搞出子问题。dp向来都是重视思考，代码一般会比较小。
 
 这道题不难看出，应该用前缀类dp或者状态类dp来看待。比如dp[i]应该看做以第i天结尾，能偷到的最大金额。对应子状态就是dp[i] = max(dp[i-1],dp[i-2] + value[i])。状态类dp多开一个维度数组，分别为0和1代表当天偷没偷，然后更新状态
-
+> 考察dp套路掌握 + 子问题分解 + 分类讨论能力
 ## 代码
 思路1——状态类dp
 ```python
@@ -2814,15 +2727,16 @@ class Solution:
 ```python
 class Solution:
     def rob(self, nums: List[int]) -> int:
-        n = len(nums)
-        if n==1: return nums[0]
-        elif n==2: return max(nums[0],nums[1])
-        dp  = [0 for i in range(n)]
-        dp[0] = nums[0]
-        dp[1] = max(nums[0],nums[1])
-        for i in range(2,n):
-            dp[i] = max(dp[i-1],dp[i-2] + nums[i])
-        return dp[n-1]
+        
+        dp:list[list[int,int]] = [[0,0] for i in range(len(nums))]
+        dp[0][0],dp[0][1] = 0,nums[0]
+        for i in range(len(nums)):
+            if i == 0:
+                continue
+            else:
+                dp[i][0] = max(dp[i-1][0],dp[i-1][1])
+                dp[i][1] = dp[i-1][0] + nums[i]
+        return max(dp[len(nums)-1][0],dp[len(nums)-1][1])
 ```
 
 # 84.完全平方数
@@ -2852,6 +2766,7 @@ class Solution:
 个人思路：这个开始上强度了，根本看不出来是dp，写了个dfs给我报超时我去。只有极致优化的记忆化dfs枚举才能过关，否则会卡常。
 官方思路：dp[i]代表组成金额i需要的最小硬币数是多少dp[i] = dp[i-j] +1,其中j的范围是各种金币类型，模拟以各种金币满足金额时的方案数，取最小的dp[i] ，有值被改动过的就是有方案，否则返回-1
 
+> 实际上和上一题的思路一模一样
 ## 代码
 ```python
 class Solution:
@@ -2869,6 +2784,8 @@ class Solution:
 
 ## 思路
 先收集单词分别以哪个字符开头，然后用一个指针指向目前要处理的字符，就可以快速找到候选单词，然后依次遍历 + startswitch就能找到匹配的。这样dfs找到某个满足的条件就是答案。无后向性和副作用，有重叠子问题，我们直接上缓存。内存不是很好，但是速度还可以，可能是样例比较弱
+
+> 单词接龙是他的升级版
 
 ## 代码
 ```python
@@ -3048,6 +2965,8 @@ class Solution:
 ## 思路
 标记解肯定是马拉车算法，但是有点复杂记不住，好几年前学的了。不过还好我记得可以用中心拓展法去做。为了解决偶数回文无法拓展的问题，我直接转成列表添加分隔符，统一转成奇数长度，最终返回时直接去掉占位符即可
 
+> 一种比较好的思路是双指针，枚举每个位置，可以不用考虑奇数串和偶数串的差异
+
 ## 代码
 ```python
 class Solution:
@@ -3118,7 +3037,8 @@ class Solution:
 > 链接：https://leetcode.cn/problems/single-number/description/?envType=study-plan-v2&envId=top-100-liked
 
 ## 思路
-使用异或可以直接做出，相同的数字异或都变成0了，所以初始值设置为0，全部异或一遍，只有一次的数保留。注意这种题还有很多变种，比如只出现两次，只出现三次，重复出现的啥的。有些是三个相加，有些是用lowbit区别，变式很多，像是脑筋急转弯
+使用异或可以直接做出，相同的数字异或都变成0了，所以初始值设置为0，全部异或一遍，只有一次的数保留。
+> 注意这种题还有很多变种，比如只出现两次，只出现三次，重复出现的啥的。有些是三个相加，有些是用lowbit区别，变式很多，像是脑筋急转弯
 
 ## 代码
 ```python
